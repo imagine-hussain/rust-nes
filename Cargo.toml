@@ -1,0 +1,16 @@
+[package]
+name = "rust_nes"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "lib" # todo: should this have an actual name?
+path = "src/lib/lib.rs"
+
+[[bin]]
+name = "rust_nes"
+path = "src/main.rs"
+
+[dependencies]
