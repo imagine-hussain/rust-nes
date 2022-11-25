@@ -1,9 +1,9 @@
-use std::rc::{Rc, Weak};
+use std::{rc::{Rc, Weak}, cell::RefCell};
 
 use crate::cpu::Cpu;
 
 pub struct Bus {
-    pub cpu: Weak<Cpu>,
+    pub cpu: Weak<RefCell<Cpu>>,
     pub ram: [u8; 64 * 1024],
 }
 
@@ -16,8 +16,8 @@ impl Bus {
         }
     }
 
-    pub fn connect_cpu(&mut self, cpu: &Cpu) {
-        self.cpu = Rc::downgrade(&Rc::new(Cpu::new()));
+    pub fn connect_cpu(&mut self, cpu: Rc<RefCell<Cpu>>) {
+        self.cpu = Rc::downgrade(&cpu);
     }
 
     pub fn write(&mut self, address: u16, data: u8) {

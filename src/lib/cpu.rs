@@ -43,15 +43,14 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new() -> Self {
+    pub fn new() -> Rc<RefCell<Self>> {
         let bus = Rc::new(RefCell::new(Bus::new()));
 
-        let new_cpu = Self {
+        let new_cpu = Rc::new(RefCell::new(Self {
             bus
-        };
+        }));
 
-        new_cpu.bus.borrow_mut().connect_cpu(&new_cpu);
-
+        new_cpu.borrow_mut().bus.borrow_mut().connect_cpu(new_cpu.clone());
 
         new_cpu
     }
@@ -65,11 +64,5 @@ impl Cpu {
         self.bus.borrow_mut().write(address, data)
     }
 
-}
-
-impl Default for Cpu {
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
