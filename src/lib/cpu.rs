@@ -95,7 +95,7 @@ impl Cpu {
     pub fn interrupt_request() { todo!() }
     pub fn non_maskabl_interrupt_request() { todo!() }
 
-    fn fetch_data() -> u8 { todo!() }
+    // fn fetch_data() -> u8 { todo!() }
 
 }
 
