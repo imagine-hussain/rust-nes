@@ -1,6 +1,6 @@
 use std::{rc::Rc, cell::RefCell};
 
-use crate::bus::Bus;
+use crate::{bus::Bus, RcCell};
 
 /// Emulator for the `6502` CPU.
 ///
@@ -39,7 +39,7 @@ use crate::bus::Bus;
 /// PC: Program Counter
 /// Status: Status register
 pub struct Cpu {
-    pub bus: Rc<RefCell<Bus>>,
+    pub bus: RcCell<Bus>,
     pub clock: usize,
     pub a_register: u8,             // Accumulator
     pub x_register: u8,             // X Register
@@ -51,7 +51,7 @@ pub struct Cpu {
 }
 
 impl Cpu {
-    pub fn new() -> Rc<RefCell<Self>> {
+    pub fn new() -> RcCell<Self> {
         let bus = Rc::new(RefCell::new(Bus::new()));
 
         let new_cpu = Rc::new(RefCell::new(Self {
@@ -71,6 +71,9 @@ impl Cpu {
         new_cpu
     }
 
+    pub fn get_bus(&self) -> RcCell<Bus> {
+        self.bus.clone()
+    }
 
     pub fn read(&self, address: u16) -> u8 {
         self.bus.borrow().read(address)

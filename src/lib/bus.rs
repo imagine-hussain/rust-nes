@@ -1,14 +1,13 @@
-use std::{rc::{Rc, Weak}, cell::RefCell};
+use std::rc::{Rc, Weak};
 
-use crate::cpu::Cpu;
+use crate::{cpu::Cpu, RcCell, WeakCell};
 
 pub struct Bus {
-    pub cpu: Weak<RefCell<Cpu>>,
+    pub cpu: WeakCell<Cpu>,
     pub ram: [u8; 64 * 1024],
 }
 
 impl Bus {
-
     pub fn new() -> Self {
         Self {
             cpu: Weak::new(),
@@ -16,15 +15,15 @@ impl Bus {
         }
     }
 
-    pub fn get_cpu(&self) -> Option<Rc<RefCell<Cpu>>> {
+    pub fn get_cpu(&self) -> Option<RcCell<Cpu>> {
         self.cpu.upgrade()
     }
 
-    pub fn unwrap_cpu(&self) -> Rc<RefCell<Cpu>> {
+    pub fn unwrap_cpu(&self) -> RcCell<Cpu> {
         self.cpu.upgrade().unwrap()
     }
 
-    pub fn connect_cpu(&mut self, cpu: Rc<RefCell<Cpu>>) {
+    pub fn connect_cpu(&mut self, cpu: RcCell<Cpu>) {
         self.cpu = Rc::downgrade(&cpu);
     }
 
@@ -41,7 +40,6 @@ impl Bus {
             0
         }
     }
-
 }
 
 impl Default for Bus {
@@ -49,5 +47,3 @@ impl Default for Bus {
         Self::new()
     }
 }
-
-
