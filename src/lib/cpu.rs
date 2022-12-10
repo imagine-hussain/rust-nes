@@ -39,13 +39,15 @@ use crate::bus::Bus;
 /// PC: Program Counter
 /// Status: Status register
 pub struct Cpu {
-    bus: Rc<RefCell<Bus>>,
-    a_register: u8,             // Accumulator
-    x_register: u8,             // X Register
-    y_register: u8,             // Y Register
-    stack_pointer: u8,          // Stack Pointer
-    program_counter: u16,       // Program Counter
-    status_register: u8,        // Status Register
+    pub bus: Rc<RefCell<Bus>>,
+    pub clock: usize,
+    pub a_register: u8,             // Accumulator
+    pub x_register: u8,             // X Register
+    pub y_register: u8,             // Y Register
+    pub stack_pointer: u8,          // Stack Pointer
+    pub program_counter: u16,       // Program Counter
+    pub status_register: u8,        // Status Register
+    pub fetched_data: u8,           // Fetched data - temp storage
 }
 
 impl Cpu {
@@ -54,6 +56,14 @@ impl Cpu {
 
         let new_cpu = Rc::new(RefCell::new(Self {
             bus,
+            clock: 0,
+            a_register: 0,
+            x_register: 0,
+            y_register: 0,
+            stack_pointer: 0,
+            program_counter: 0,
+            status_register: 0,
+            fetched_data: 0,
         }));
 
         new_cpu.borrow_mut().bus.borrow_mut().connect_cpu(new_cpu.clone());
@@ -70,6 +80,20 @@ impl Cpu {
         self.bus.borrow_mut().write(address, data)
     }
 
+    pub fn clock(&mut self) {
+        self.clock += 1
+    }
+
+    pub fn clock_n(&mut self, cycles: usize) {
+        self.clock += cycles
+    }
+
+    pub fn reset() { todo!() }
+    pub fn interrupt_request() { todo!() }
+    pub fn non_maskabl_interrupt_request() { todo!() }
+
+    fn fetch_data() -> u8 { todo!() }
+
 }
 
 pub enum CpuFlag {
@@ -83,7 +107,7 @@ pub enum CpuFlag {
     Negative = 1 << 7,      // Set when the result of an operation is negative
 }
 
-fn set_flag(flag: CpuFlag, status_register: u8) -> u8 {
+pub fn set_flag(flag: CpuFlag, status_register: u8) -> u8 {
     status_register | flag as u8
 }
 

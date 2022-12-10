@@ -16,6 +16,14 @@ impl Bus {
         }
     }
 
+    pub fn get_cpu(&self) -> Option<Rc<RefCell<Cpu>>> {
+        self.cpu.upgrade()
+    }
+
+    pub fn unwrap_cpu(&self) -> Rc<RefCell<Cpu>> {
+        self.cpu.upgrade().unwrap()
+    }
+
     pub fn connect_cpu(&mut self, cpu: Rc<RefCell<Cpu>>) {
         self.cpu = Rc::downgrade(&cpu);
     }
