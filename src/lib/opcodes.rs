@@ -56,10 +56,12 @@ pub enum OpCode {
     TXA,
     TXS,
     TYA,
+    /// Illegal; Not a real thing in the actual NES. Anything not implemented is illegal
+    ILL,
 }
 
 /// Goated Resource: https://www.svaught.com/posts/addr-modes-6502
-enum AddressingModes {
+pub enum AddressingMode {
     /// Implied: No data in the instruction.
     /// This *can* be operating on the accumulator.
     IMP,
@@ -98,7 +100,7 @@ enum AddressingModes {
     /// The next two bytes contain a pointer to some other address. The
     /// The data at that target location is used.
     /// This mode is prone to over-flowing into the next page. This is a bug
-    /// in the hardware that does not get fixed.
+    /// in the hardware that does not get fixed. <https://nesdev.com/6502bugs.txt>
     IND,
     /// Indirect X Offset: Similar to Indirect, but with an addition offset inside
     /// the X register

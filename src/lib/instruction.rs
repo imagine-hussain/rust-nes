@@ -1,14 +1,65 @@
-use crate::OpCode;
+use crate::{OpCode, Cpu};
 
-enum AddressingMode { }
-
-pub struct Instruction {
-    pub opcode: OpCode,
-    pub name: &'static str,
-    pub mode: AddressingMode,
-}
-
-impl TryFrom<int> {
-    
+fn execute_operation(cpu: &mut Cpu, opcode: OpCode) -> u8 {
+    match opcode {
+        OpCode::ADC => {
+        },
+        OpCode::AND => todo!(),
+        OpCode::ASL => todo!(),
+        OpCode::BCC => todo!(),
+        OpCode::BCS => todo!(),
+        OpCode::BEQ => todo!(),
+        OpCode::BIT => todo!(),
+        OpCode::BMI => todo!(),
+        OpCode::BNE => todo!(),
+        OpCode::BPL => todo!(),
+        OpCode::BRK => todo!(),
+        OpCode::BVC => todo!(),
+        OpCode::BVS => todo!(),
+        OpCode::CLC => todo!(),
+        OpCode::CLD => todo!(),
+        OpCode::CLI => todo!(),
+        OpCode::CLV => todo!(),
+        OpCode::CMP => todo!(),
+        OpCode::CPX => todo!(),
+        OpCode::CPY => todo!(),
+        OpCode::DEC => todo!(),
+        OpCode::DEX => todo!(),
+        OpCode::DEY => todo!(),
+        OpCode::EOR => todo!(),
+        OpCode::INC => todo!(),
+        OpCode::INX => todo!(),
+        OpCode::INY => todo!(),
+        OpCode::JMP => todo!(),
+        OpCode::JSR => todo!(),
+        OpCode::LDA => todo!(),
+        OpCode::LDX => todo!(),
+        OpCode::LDY => todo!(),
+        OpCode::LSR => todo!(),
+        OpCode::NOP => todo!(),
+        OpCode::ORA => todo!(),
+        OpCode::PHA => todo!(),
+        OpCode::PHP => todo!(),
+        OpCode::PLA => todo!(),
+        OpCode::PLP => todo!(),
+        OpCode::ROL => todo!(),
+        OpCode::ROR => todo!(),
+        OpCode::RTI => todo!(),
+        OpCode::RTS => todo!(),
+        OpCode::SBC => todo!(),
+        OpCode::SEC => todo!(),
+        OpCode::SED => todo!(),
+        OpCode::SEI => todo!(),
+        OpCode::STA => todo!(),
+        OpCode::STX => todo!(),
+        OpCode::STY => todo!(),
+        OpCode::TAX => todo!(),
+        OpCode::TAY => todo!(),
+        OpCode::TSX => todo!(),
+        OpCode::TXA => todo!(),
+        OpCode::TXS => todo!(),
+        OpCode::TYA => todo!(),
+        OpCode::ILL => todo!(),
+    }
 }
 

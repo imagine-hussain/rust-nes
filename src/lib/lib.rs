@@ -9,7 +9,7 @@ use std::{
     rc::{Rc, Weak},
 };
 
-pub use opcodes::OpCode;
+pub use opcodes::{OpCode, AddressingModes};
 
 pub use bus::Bus;
 pub use cpu::Cpu;
