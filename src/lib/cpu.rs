@@ -52,10 +52,10 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new() -> RcCell<Self> {
-        let bus = Rc::new(RefCell::new(Bus::new()));
+        let tmp_bus = Rc::new(RefCell::new(Bus::default()));
 
         let new_cpu = Rc::new(RefCell::new(Self {
-            bus,
+            bus: tmp_bus,
             clock: 0,
             a_register: 0,
             x_register: 0,
@@ -66,7 +66,7 @@ impl Cpu {
             fetched_data: 0,
         }));
 
-        new_cpu.borrow_mut().bus.borrow_mut().connect_cpu(new_cpu.clone());
+        new_cpu.borrow_mut().bus.borrow_mut().connect_cpu(Rc::downgrade(&new_cpu));
 
         new_cpu
     }
@@ -93,7 +93,7 @@ impl Cpu {
 
     pub fn reset() { todo!() }
     pub fn interrupt_request() { todo!() }
-    pub fn non_maskabl_interrupt_request() { todo!() }
+    pub fn non_maskable_interrupt_request() { todo!() }
 
     // fn fetch_data() -> u8 { todo!() }
 

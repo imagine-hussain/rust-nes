@@ -8,9 +8,10 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new() -> Self {
+
+    pub fn new(cpu: WeakCell<Cpu>) -> Self {
         Self {
-            cpu: Weak::new(),
+            cpu,
             ram: [0; 64 * 1024],
         }
     }
@@ -23,8 +24,8 @@ impl Bus {
         self.cpu.upgrade().unwrap()
     }
 
-    pub fn connect_cpu(&mut self, cpu: RcCell<Cpu>) {
-        self.cpu = Rc::downgrade(&cpu);
+    pub fn connect_cpu(&mut self, cpu: WeakCell<Cpu>) {
+        self.cpu = cpu;
     }
 
     pub fn write(&mut self, address: u16, data: u8) {
@@ -43,7 +44,10 @@ impl Bus {
 }
 
 impl Default for Bus {
-    fn default() -> Self {
-        Self::new()
+    fn default () -> Self {
+        Self {
+            cpu: Weak::new(),
+            ram: [0; 64 * 1024],
+        }
     }
 }
