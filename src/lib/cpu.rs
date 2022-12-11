@@ -1,6 +1,6 @@
 use std::{rc::Rc, cell::RefCell};
 
-use crate::{bus::Bus, RcCell};
+use crate::{bus::Bus, RcCell, OpCode};
 
 /// Emulator for the `6502` CPU.
 ///
@@ -71,6 +71,27 @@ impl Cpu {
         new_cpu
     }
 
+    pub fn execute_clock_cycle(&mut self) {
+        // Fetch
+        let raw_opcode = self.read(self.program_counter);
+        self.program_counter += 1;
+
+        // Set unused flag
+        self.status_register = set_flag(CpuFlag::Unused, self.status_register);
+        let opcode: OpCode = raw_opcode.into();
+
+        // Execute what is required for the operation including address mode operations
+        let additional_cycle_addrmode = opcode.addr_mode(self);
+        let additional_cycle_operation = opcode.execute(self);
+        if additional_cycle_addrmode && additional_cycle_operation {
+            self.clock += 1;
+        }
+
+        // Decode
+        // Execute
+        // Increment PC
+    }
+
     pub fn get_bus(&self) -> RcCell<Bus> {
         self.bus.clone()
     }
@@ -81,11 +102,6 @@ impl Cpu {
 
     pub fn write(&mut self, address: u16, data: u8) {
         self.bus.borrow_mut().write(address, data)
-    }
-
-    pub fn do_clock(&mut self) {
-        let opcode: Opcode = self.read(self.program_counter).into();
-        self.clock();
     }
 
     pub fn clock(&mut self) {
@@ -118,18 +134,4 @@ pub enum CpuFlag {
 pub fn set_flag(flag: CpuFlag, status_register: u8) -> u8 {
     status_register | flag as u8
 }
-
-// Addressing Modes:
-// IMP: Implied
-// IMM: Immediate
-// ZP0: Zero Page
-// ZPX: Zero Page, X
-// ZPY: Zero Page, Y
-// REL: Relative
-// ABS: Absolute
-// ABX: Absolute, X
-// ABY: Absolute, Y
-// IND: Indirect
-// IZX: Indirect, X
-// IZY: Indirect, Y
 
