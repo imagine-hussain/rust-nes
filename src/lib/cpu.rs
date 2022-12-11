@@ -83,6 +83,11 @@ impl Cpu {
         self.bus.borrow_mut().write(address, data)
     }
 
+    pub fn do_clock(&mut self) {
+        let opcode: Opcode = self.read(self.program_counter).into();
+        self.clock();
+    }
+
     pub fn clock(&mut self) {
         self.clock += 1
     }

@@ -1,5 +1,3 @@
-use std::rc::{Rc, Weak};
-
 use crate::{cpu::Cpu, RcCell, WeakCell};
 
 pub struct Bus {
@@ -46,7 +44,7 @@ impl Bus {
 impl Default for Bus {
     fn default () -> Self {
         Self {
-            cpu: Weak::new(),
+            cpu: WeakCell::new(),
             ram: [0; 64 * 1024],
         }
     }
