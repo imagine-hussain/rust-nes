@@ -13,6 +13,7 @@ impl Nes {
     fn new(cpu: RcCell<Cpu>, bus: RcCell<Bus>) -> Self {
         Self { cpu, bus }
     }
+
 }
 
 impl Default for Nes {

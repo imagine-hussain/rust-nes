@@ -108,6 +108,15 @@ pub enum OpCodeType {
     XXX,
 }
 
+impl From<u8> for OpCodeType {
+    fn from(val: u8) -> Self {
+        match val {
+            0x0 => todo!(),
+            _ => OpCodeType::XXX,
+        }
+    }
+}
+
 /// Goated Resource: https://www.svaught.com/posts/addr-modes-6502
 pub enum AddressingMode {
     /// Implied: No data in the instruction.
