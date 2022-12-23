@@ -1,6 +1,6 @@
 use std::{rc::Rc, cell::RefCell};
 
-use crate::{bus::Bus, RcCell, OpCode};
+use crate::{bus::Bus, RcCell, OpCodeType};
 
 /// Emulator for the `6502` CPU.
 ///
@@ -78,7 +78,7 @@ impl Cpu {
 
         // Set unused flag
         self.status_register = set_flag(CpuFlag::Unused, self.status_register);
-        let opcode: OpCode = raw_opcode.into();
+        let opcode: OpCodeType = raw_opcode.into();
 
         // Execute what is required for the operation including address mode operations
         let additional_cycle_addrmode = opcode.addr_mode(self);

@@ -9,11 +9,11 @@ use std::{
     rc::{Rc, Weak},
 };
 
-pub use opcodes::{OpCode, AddressingModes};
+pub use opcodes::{OpCodeType, AddressingMode, OpCode};
 
 pub use bus::Bus;
 pub use cpu::Cpu;
-pub use instruction::Instruction;
+// pub use instruction::Instruction;
 
 pub type RcCell<T> = Rc<RefCell<T>>;
 pub type WeakCell<T> = Weak<RefCell<T>>;
