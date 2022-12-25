@@ -24,3 +24,4 @@ impl Default for Nes {
         Self { cpu, bus }
     }
 }
+
