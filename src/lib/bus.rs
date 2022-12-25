@@ -6,7 +6,6 @@ pub struct Bus {
 }
 
 impl Bus {
-
     pub fn new(cpu: WeakCell<Cpu>) -> Self {
         Self {
             cpu,
@@ -42,7 +41,7 @@ impl Bus {
 }
 
 impl Default for Bus {
-    fn default () -> Self {
+    fn default() -> Self {
         Self {
             cpu: WeakCell::new(),
             ram: [0; 64 * 1024],

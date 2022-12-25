@@ -1,18 +1,16 @@
 pub mod cpu;
 
+pub mod addressing;
 pub mod bus;
 pub mod opcodes;
-pub mod instruction;
-pub mod addressing;
-
 
 use std::{
     cell::RefCell,
     rc::{Rc, Weak},
 };
 
-pub use opcodes::opcodes::OpCode;
 pub use addressing::AddressingMode;
+pub use opcodes::opcodes::OpCode;
 
 pub use bus::Bus;
 pub use cpu::Cpu;
@@ -20,5 +18,3 @@ pub use cpu::Cpu;
 
 pub type RcCell<T> = Rc<RefCell<T>>;
 pub type WeakCell<T> = Weak<RefCell<T>>;
-
-

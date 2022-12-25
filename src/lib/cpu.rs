@@ -1,5 +1,5 @@
-use std::{rc::Rc, cell::RefCell};
-use crate::{bus::Bus, RcCell, opcodes::opcode_types::OpCodeType};
+use crate::{bus::Bus, opcodes::opcode_types::OpCodeType, RcCell};
+use std::{cell::RefCell, rc::Rc};
 
 /// Emulator for the `6502` CPU.
 ///
@@ -28,8 +28,6 @@ use crate::{bus::Bus, RcCell, opcodes::opcode_types::OpCodeType};
 ///
 ///
 
-
-
 /// Registers:
 /// A: Accumulator
 /// X: Register
@@ -40,13 +38,16 @@ use crate::{bus::Bus, RcCell, opcodes::opcode_types::OpCodeType};
 pub struct Cpu {
     pub bus: RcCell<Bus>,
     pub clock: usize,
-    pub a_register: u8,             // Accumulator
-    pub x_register: u8,             // X Register
-    pub y_register: u8,             // Y Register
-    pub stack_pointer: u8,          // Stack Pointer
-    pub program_counter: u16,       // Program Counter
-    pub status_register: u8,        // Status Register
-    pub fetched_data: u8,           // Fetched data - temp storage
+    pub a_register: u8,       // Accumulator
+    pub x_register: u8,       // X Register
+    pub y_register: u8,       // Y Register
+    pub stack_pointer: u8,    // Stack Pointer
+    pub program_counter: u16, // Program Counter
+    pub status_register: u8,  // Status Register
+    /// Not "real" parts of the hardware but for emulation
+    pub fetched_data: u8, // Fetched data - temp storage
+    pub absolute_addr: u16,   // Absolute address being read off
+    pub relative_addr: i8,    // Address relative to abs address
 }
 
 impl Cpu {
@@ -63,11 +64,21 @@ impl Cpu {
             program_counter: 0,
             status_register: 0,
             fetched_data: 0,
+            absolute_addr: 0,
+            relative_addr: 0,
         }));
 
-        new_cpu.borrow_mut().bus.borrow_mut().connect_cpu(Rc::downgrade(&new_cpu));
+        new_cpu
+            .borrow_mut()
+            .bus
+            .borrow_mut()
+            .connect_cpu(Rc::downgrade(&new_cpu));
 
         new_cpu
+    }
+
+    pub fn fetch(&mut self) {
+        // Fetch based on the current addressing mode
     }
 
     pub fn execute_clock_cycle(&mut self) {
@@ -116,26 +127,30 @@ impl Cpu {
         self.clock += cycles
     }
 
-    pub fn reset() { todo!() }
-    pub fn interrupt_request() { todo!() }
-    pub fn non_maskable_interrupt_request() { todo!() }
+    pub fn reset() {
+        todo!()
+    }
+    pub fn interrupt_request() {
+        todo!()
+    }
+    pub fn non_maskable_interrupt_request() {
+        todo!()
+    }
 
     // fn fetch_data() -> u8 { todo!() }
-
 }
 
 pub enum CpuFlag {
     Carry = 1 << 0,
-    Zero = 1 << 1,          // Set when result of operation is 0
-    Interrupt = 1 << 2,     // Disable interrupts; TODO: what is order?
-    Decimal = 1 << 3,       // If in Decimal mode; TODO: unused
-    Break = 1 << 4,         // Set when a break instruction is executed
-    Unused = 1 << 5,        // Unused
-    Overflow = 1 << 6,      // Set when an overflow occurs. Only when using signed values
-    Negative = 1 << 7,      // Set when the result of an operation is negative
+    Zero = 1 << 1,      // Set when result of operation is 0
+    Interrupt = 1 << 2, // Disable interrupts; TODO: what is order?
+    Decimal = 1 << 3,   // If in Decimal mode; TODO: unused
+    Break = 1 << 4,     // Set when a break instruction is executed
+    Unused = 1 << 5,    // Unused
+    Overflow = 1 << 6,  // Set when an overflow occurs. Only when using signed values
+    Negative = 1 << 7,  // Set when the result of an operation is negative
 }
 
 pub fn set_flag(flag: CpuFlag, status_register: u8) -> u8 {
     status_register | flag as u8
 }
-
