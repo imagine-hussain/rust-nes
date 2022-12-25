@@ -12,7 +12,6 @@ use std::{
 };
 
 pub use opcodes::opcodes::OpCode;
-pub use opcodes::OpCodeType;
 pub use addressing::AddressingMode;
 
 pub use bus::Bus;

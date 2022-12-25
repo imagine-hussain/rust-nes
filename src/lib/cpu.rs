@@ -91,22 +91,27 @@ impl Cpu {
         // Increment PC
     }
 
+    #[inline(always)]
     pub fn get_bus(&self) -> RcCell<Bus> {
         self.bus.clone()
     }
 
+    #[inline(always)]
     pub fn read(&self, address: u16) -> u8 {
         self.bus.borrow().read(address)
     }
 
+    #[inline(always)]
     pub fn write(&mut self, address: u16, data: u8) {
         self.bus.borrow_mut().write(address, data)
     }
 
+    #[inline(always)]
     pub fn clock(&mut self) {
         self.clock += 1
     }
 
+    #[inline(always)]
     pub fn clock_n(&mut self, cycles: usize) {
         self.clock += cycles
     }

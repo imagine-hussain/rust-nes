@@ -1,5 +1,6 @@
 
 /// Goated Resource: https://www.svaught.com/posts/addr-modes-6502
+#[derive(Debug)]
 pub enum AddressingMode {
     /// Implied: No data in the instruction.
     /// This *can* be operating on the accumulator.
