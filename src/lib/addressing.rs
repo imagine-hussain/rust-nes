@@ -58,17 +58,16 @@ impl AddressingMode {
         match *self {
             AddressingMode::IMP => &fetch_imp,
             AddressingMode::IMM => &fetch_imm,
-            // AddressingMode::ZP0 => &fetch_zp0,
-            // AddressingMode::ZPX => &fetch_zpx,
-            // AddressingMode::ZPY => &fetch_zpy,
-            // AddressingMode::REL => &fetch_rel,
-            // AddressingMode::ABS => &fetch_abs,
-            // AddressingMode::ABX => &fetch_abx,
-            // AddressingMode::ABY => &fetch_aby,
-            // AddressingMode::IND => &fetch_ind,
-            // AddressingMode::IZX => &fetch_izx,
-            // AddressingMode::IZY => &fetch_izy,
-            _ => todo!(),
+            AddressingMode::ZP0 => &fetch_zp0,
+            AddressingMode::ZPX => &fetch_zpx,
+            AddressingMode::ZPY => &fetch_zpy,
+            AddressingMode::REL => &fetch_rel,
+            AddressingMode::ABS => &fetch_abs,
+            AddressingMode::ABX => &fetch_abx,
+            AddressingMode::ABY => &fetch_aby,
+            AddressingMode::IND => &fetch_ind,
+            AddressingMode::IZX => &fetch_izx,
+            AddressingMode::IZY => &fetch_izy,
         }
     }
 }
@@ -152,10 +151,10 @@ fn fetch_aby(cpu: &mut Cpu) -> u8 {
     ((cpu.absolute_addr & 0xFF00) != (hi << 8)).into()
 }
 fn fetch_ind(cpu: &mut Cpu) -> u8 {
-    let lo = cpu.read(cpu.program_counter);
+    let lo = cpu.read(cpu.program_counter) as u16;
     cpu.program_counter += 1;
-    let hi = cpu.read(cpu.program_counter);
-    let ptr_addr: u16 = (hi << 8) as u16 | lo as u16;
+    let hi = cpu.read(cpu.program_counter) as u16;
+    let ptr_addr: u16 = (hi << 8) | lo;
 
     // Simulate page boundary hardware bug
     cpu.absolute_addr = match lo == 0x00FF {
