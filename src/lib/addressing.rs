@@ -152,7 +152,6 @@ fn fetch_aby(cpu: &mut Cpu) -> u8 {
     ((cpu.absolute_addr & 0xFF00) != (hi << 8)).into()
 }
 fn fetch_ind(cpu: &mut Cpu) -> u8 {
-
     let lo = cpu.read(cpu.program_counter);
     cpu.program_counter += 1;
     let hi = cpu.read(cpu.program_counter);
