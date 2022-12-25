@@ -5,7 +5,7 @@ use crate::opcodes::opcode_types::OpCodeType::*;
 impl From<u8> for OpCode {
     fn from(raw: u8) -> Self {
         let (hi, lo) = (raw >> 4, raw & 0x0F);
-        match (hi) {
+        match hi {
             0x0 => opcode_from_hi_0x0(lo),
             0x1 => opcode_from_hi_0x1(lo),
             0x2 => opcode_from_hi_0x2(lo),
@@ -67,6 +67,7 @@ fn opcode_from_hi_0x1(lo: u8) -> OpCode {
         0xD => OpCode::new(ORA, ABX, 4),
         0xE => OpCode::new(ASL, ABX, 7),
         0xF => OpCode::new(XXX, IMP, 7),
+        _ => unreachable!("lo nibble bounded by 0xF"),
     }
 }
 

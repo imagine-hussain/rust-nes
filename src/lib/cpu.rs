@@ -1,5 +1,5 @@
 use std::{rc::Rc, cell::RefCell};
-use crate::{bus::Bus, RcCell, OpCodeType};
+use crate::{bus::Bus, RcCell, opcodes::opcode_types::OpCodeType};
 
 /// Emulator for the `6502` CPU.
 ///
@@ -72,19 +72,19 @@ impl Cpu {
 
     pub fn execute_clock_cycle(&mut self) {
         // Fetch
-        let raw_opcode = self.read(self.program_counter);
-        self.program_counter += 1;
-
-        // Set unused flag
-        self.status_register = set_flag(CpuFlag::Unused, self.status_register);
-        let opcode: OpCodeType = raw_opcode.into();
-
-        // Execute what is required for the operation including address mode operations
-        let additional_cycle_addrmode = opcode.addr_mode(self);
-        let additional_cycle_operation = opcode.execute(self);
-        if additional_cycle_addrmode && additional_cycle_operation {
-            self.clock += 1;
-        }
+        // let raw_opcode = self.read(self.program_counter);
+        // self.program_counter += 1;
+        //
+        // // Set unused flag
+        // self.status_register = set_flag(CpuFlag::Unused, self.status_register);
+        // let opcode: OpCodeType = raw_opcode.into();
+        //
+        // // Execute what is required for the operation including address mode operations
+        // let additional_cycle_addrmode = opcode.addr_mode(self);
+        // let additional_cycle_operation = opcode.execute(self);
+        // if additional_cycle_addrmode && additional_cycle_operation {
+        //     self.clock += 1;
+        // }
 
         // Decode
         // Execute
