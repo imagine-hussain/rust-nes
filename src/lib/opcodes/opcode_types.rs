@@ -63,7 +63,7 @@ pub enum OpCodeType {
 }
 
 impl OpCodeType {
-    fn executable(&self, cpu: &mut Cpu) -> Box<dyn Fn(&mut Cpu) -> bool> {
+    pub fn execute_instruction(&self) -> &'static dyn Fn(&mut Cpu) -> bool {
         match *self {
             OpCodeType::ADC => todo!(),
             OpCodeType::AND => todo!(),

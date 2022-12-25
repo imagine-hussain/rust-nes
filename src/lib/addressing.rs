@@ -1,3 +1,4 @@
+use crate::Cpu;
 
 /// Goated Resource: https://www.svaught.com/posts/addr-modes-6502
 #[derive(Debug)]
@@ -43,9 +44,156 @@ pub enum AddressingMode {
     /// in the hardware that does not get fixed. <https://nesdev.com/6502bugs.txt>
     IND,
     /// Indirect X Offset: Similar to Indirect, but with an addition offset inside
-    /// the X register
+    /// the X register.
+    /// The offset is relative to the zero page.
     IZX,
     /// Indirect Y Offset: Similar to Indirect, but with an addition offset inside
     /// the Y register
+    /// The offset is relative to the zero page.
     IZY,
+}
+
+impl AddressingMode {
+    pub fn fetch(&self) -> &'static dyn Fn(&mut Cpu) -> u8 {
+        match *self {
+            AddressingMode::IMP => &fetch_imp,
+            AddressingMode::IMM => &fetch_imm,
+            // AddressingMode::ZP0 => &fetch_zp0,
+            // AddressingMode::ZPX => &fetch_zpx,
+            // AddressingMode::ZPY => &fetch_zpy,
+            // AddressingMode::REL => &fetch_rel,
+            // AddressingMode::ABS => &fetch_abs,
+            // AddressingMode::ABX => &fetch_abx,
+            // AddressingMode::ABY => &fetch_aby,
+            // AddressingMode::IND => &fetch_ind,
+            // AddressingMode::IZX => &fetch_izx,
+            // AddressingMode::IZY => &fetch_izy,
+            _ => todo!(),
+        }
+    }
+}
+
+fn fetch_imp(cpu: &mut Cpu) -> u8 {
+    cpu.fetched_data = cpu.a_register;
+    0
+}
+
+fn fetch_imm(cpu: &mut Cpu) -> u8 {
+    cpu.absolute_addr += 1;
+    0
+}
+
+fn fetch_zp0(cpu: &mut Cpu) -> u8 {
+    let offset = cpu.read(cpu.program_counter as u16);
+
+    cpu.absolute_addr = offset as u16;
+
+    0
+}
+
+fn fetch_zpx(cpu: &mut Cpu) -> u8 {
+    let offset = cpu.read(cpu.program_counter) + cpu.x_register;
+    cpu.absolute_addr = (offset as u16) & 0x00FF;
+    cpu.program_counter += 1;
+    0
+}
+
+fn fetch_zpy(cpu: &mut Cpu) -> u8 {
+    let offset = cpu.read(cpu.program_counter) + cpu.y_register;
+    cpu.absolute_addr = (offset as u16) & 0x00FF;
+    cpu.program_counter += 1;
+    0
+}
+
+fn fetch_rel(cpu: &mut Cpu) -> u8 {
+    // TODO: check impl when signed
+    cpu.relative_addr = cpu.read(cpu.program_counter) as i8;
+    cpu.program_counter += 1;
+
+    0
+}
+
+fn fetch_abs(cpu: &mut Cpu) -> u8 {
+    let lo = cpu.read(cpu.program_counter) as u16;
+    cpu.program_counter += 1;
+    let hi = cpu.read(cpu.program_counter) as u16;
+    cpu.program_counter += 1;
+
+    cpu.absolute_addr = (hi << 8) | lo;
+
+    0
+}
+
+fn fetch_abx(cpu: &mut Cpu) -> u8 {
+    let lo = cpu.read(cpu.program_counter) as u16;
+    cpu.program_counter += 1;
+    let hi = cpu.read(cpu.program_counter) as u16;
+    cpu.program_counter += 1;
+
+    cpu.absolute_addr = ((hi << 8) | lo) + cpu.x_register as u16;
+
+    // If page overflow, then add a cycle
+    match (cpu.absolute_addr & 0xFF00) != (hi << 8) {
+        true => 1,
+        false => 0,
+    }
+}
+
+fn fetch_aby(cpu: &mut Cpu) -> u8 {
+    let lo = cpu.read(cpu.program_counter) as u16;
+    cpu.program_counter += 1;
+    let hi = cpu.read(cpu.program_counter) as u16;
+    cpu.program_counter += 1;
+
+    cpu.absolute_addr = ((hi << 8) | lo) + cpu.y_register as u16;
+
+    // If page overflow, then add a cycle
+    // (cpu.absolute_addr & 0xFF00) != (hi << 8)).into()
+    ((cpu.absolute_addr & 0xFF00) != (hi << 8)).into()
+}
+fn fetch_ind(cpu: &mut Cpu) -> u8 {
+
+    let lo = cpu.read(cpu.program_counter);
+    cpu.program_counter += 1;
+    let hi = cpu.read(cpu.program_counter);
+    let ptr_addr: u16 = (hi << 8) as u16 | lo as u16;
+
+    // Simulate page boundary hardware bug
+    cpu.absolute_addr = match lo == 0x00FF {
+        // Bug: Lo byte of pointer is 0x00FF.
+        // Getting Hi bytes of pointer is at ptr_addr + 1, which is crossing a
+        // page boundary. Instead, just wrap around to the start of the same
+        // page
+        true => ((cpu.read(ptr_addr & 0xFF00) as u16) << 8) | (cpu.read(ptr_addr) as u16),
+        // Normal behaviour
+        false => ((cpu.read(ptr_addr + 1) as u16) << 8) | (cpu.read(ptr_addr) as u16),
+    };
+
+    0
+}
+
+fn fetch_izx(cpu: &mut Cpu) -> u8 {
+    let offset: u16 = (cpu.read(cpu.program_counter) + cpu.x_register) as u16;
+    cpu.program_counter += 1;
+
+    // & 0x00FF to wrap around instead of moving to the next page
+    let lo = cpu.read(offset & 0x00FF) as u16;
+    let hi = cpu.read((offset + 1) & 0x00FF) as u16;
+
+    cpu.absolute_addr = (hi << 8) | lo;
+
+    0
+}
+
+fn fetch_izy(cpu: &mut Cpu) -> u8 {
+    let offset: u16 = cpu.read(cpu.program_counter) as u16;
+    cpu.program_counter += 1;
+
+    let lo = cpu.read(offset & 0x00FF) as u16;
+    let hi = cpu.read((offset + 1) & 0x00FF) as u16;
+
+    cpu.absolute_addr = ((hi << 8) | lo) + cpu.y_register as u16;
+
+    // If page overflow, then add a cycle
+    ((cpu.absolute_addr & 0xFF00) != (hi << 8)).into()
 }
