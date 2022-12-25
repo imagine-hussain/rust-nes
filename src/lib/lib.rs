@@ -3,13 +3,17 @@ pub mod cpu;
 pub mod bus;
 pub mod opcodes;
 pub mod instruction;
+pub mod addressing;
+
 
 use std::{
     cell::RefCell,
     rc::{Rc, Weak},
 };
 
-pub use opcodes::{OpCodeType, AddressingMode, OpCode};
+pub use opcodes::opcodes::OpCode;
+pub use opcodes::OpCodeType;
+pub use addressing::AddressingMode;
 
 pub use bus::Bus;
 pub use cpu::Cpu;

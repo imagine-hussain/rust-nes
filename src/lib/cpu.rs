@@ -1,5 +1,4 @@
 use std::{rc::Rc, cell::RefCell};
-
 use crate::{bus::Bus, RcCell, OpCodeType};
 
 /// Emulator for the `6502` CPU.
