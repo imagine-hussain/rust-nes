@@ -1,4 +1,4 @@
-use crate::{bus::Bus, opcodes::opcode_types::OpCodeType, RcCell};
+use crate::{bus::Bus, opcodes::opcode_types::OpCodeType, AddressingMode, RcCell};
 use std::{cell::RefCell, rc::Rc};
 
 /// Emulator for the `6502` CPU.
@@ -44,10 +44,12 @@ pub struct Cpu {
     pub stack_pointer: u8,    // Stack Pointer
     pub program_counter: u16, // Program Counter
     pub status_register: u8,  // Status Register
+    ///
     /// Not "real" parts of the hardware but for emulation
     pub fetched_data: u8, // Fetched data - temp storage
     pub absolute_addr: u16,   // Absolute address being read off
     pub relative_addr: i8,    // Address relative to abs address
+    pub addressing_mode: AddressingMode, // Addressing mode
 }
 
 impl Cpu {
@@ -66,6 +68,7 @@ impl Cpu {
             fetched_data: 0,
             absolute_addr: 0,
             relative_addr: 0,
+            addressing_mode: AddressingMode::IMP,
         }));
 
         new_cpu
@@ -77,8 +80,12 @@ impl Cpu {
         new_cpu
     }
 
-    pub fn fetch(&mut self) {
-        // Fetch based on the current addressing mode
+    /// Fetch based on the current addressing mode. Stored in `self.fetched_data`
+    /// Also returns the fetched_data
+    pub fn fetch(&mut self) -> u8 {
+        // todo: special case for imp
+        self.addressing_mode.fetch()(self);
+        self.fetched_data
     }
 
     pub fn execute_clock_cycle(&mut self) {
@@ -137,9 +144,23 @@ impl Cpu {
         todo!()
     }
 
+    pub fn set_flag(&mut self, flag: &CpuFlag) {
+        self.status_register = set_flag(&self.status_register, flag)
+    }
+
+    pub fn clear_flag(&mut self, flag: &CpuFlag) {
+        self.status_register = clear_flag(&self.status_register, flag)
+    }
+
+    #[inline]
+    pub fn get_flag(&self, flag: &CpuFlag) -> bool {
+        (self.status_register & *flag as u8) != 0
+    }
+
     // fn fetch_data() -> u8 { todo!() }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum CpuFlag {
     Carry = 1 << 0,
     Zero = 1 << 1,      // Set when result of operation is 0
@@ -151,6 +172,10 @@ pub enum CpuFlag {
     Negative = 1 << 7,  // Set when the result of an operation is negative
 }
 
-pub fn set_flag(flag: CpuFlag, status_register: u8) -> u8 {
-    status_register | flag as u8
+pub fn set_flag(status_register: &u8, flag: &CpuFlag) -> u8 {
+    *status_register | *flag as u8
+}
+
+pub fn clear_flag(status_register: &u8, flag: &CpuFlag) -> u8 {
+    *status_register & (!(*flag as u8))
 }
