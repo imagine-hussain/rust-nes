@@ -363,3 +363,28 @@ fn compare_values(cpu: &mut Cpu, register_val: u8) {
 }
 
 
+/// # Decrement X Register
+/// Subtracts one from the X register setting the zero and negative flags as appropriate.
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if X == 0
+/// - N - Negative Flag     - Set if bit 7 of X is set
+fn dex_fn(cpu: &mut Cpu) -> u8 {
+    cpu.x_register = cpu.x_register.wrapping_sub(1);
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
+    0
+}
+
+/// # Decrement y Register
+/// Subtracts one from the y register setting the zero and negative flags as appropriate.
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if y == 0
+/// - N - Negative Flag     - Set if bit 7 of y is set
+fn dey_fn(cpu: &mut Cpu) -> u8 {
+    cpu.y_register = cpu.x_register.wrapping_sub(1);
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
+    0
+}
+
+
