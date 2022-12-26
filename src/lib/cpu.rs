@@ -134,6 +134,12 @@ impl Cpu {
     }
 
     #[inline(always)]
+    pub fn pop_stack(&mut self) -> u8 {
+        self.stack_pointer += 1;
+        self.read(Cpu::STACK_BASE + self.stack_pointer as u16)
+    }
+
+    #[inline(always)]
     pub fn clock(&mut self) {
         self.clock += 1
     }

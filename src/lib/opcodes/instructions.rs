@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 /// Functions for each instruction
 ///
 /// Documentation from:
@@ -309,7 +307,6 @@ fn clv_fn(cpu: &mut Cpu) -> u8 {
     0
 }
 
-
 /// # Compare Accumultor
 /// Compares the contents of the accumulator with another value in memory (M).
 /// Result is returned by setting zero and carry flags.
@@ -336,7 +333,6 @@ fn cpx_fn(cpu: &mut Cpu) -> u8 {
     0
 }
 
-
 /// # Compare Y Register
 /// Compares the contents of the Y register with another value in memory (M).
 /// Result is returned by setting zero and carry flags.
@@ -361,7 +357,6 @@ fn compare_values(cpu: &mut Cpu, register_val: u8) {
     cpu.set_or_clear_flag(&CpuFlag::Carry, result == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, result & 0x80 != 0);
 }
-
 
 /// # Decrement X Register
 /// Subtracts one from the X register setting the zero and negative flags as appropriate.
@@ -399,7 +394,6 @@ fn eor_fn(cpu: &mut Cpu) -> u8 {
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
     1
 }
-
 
 /// # Increment Memory
 /// Add one to the value at the memory address.
@@ -461,7 +455,6 @@ fn jsr_fn(cpu: &mut Cpu) -> u8 {
     0
 }
 
-
 /// # Load Accumulator
 /// Loads a byte into the accumulator from Memory
 /// ## Processor Status after use:
@@ -499,6 +492,190 @@ fn ldy_fn(cpu: &mut Cpu) -> u8 {
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
 
     1
+}
+
+/// # Logical Shift Right
+/// Shift the bits in A or M (depending on addressing mode) to the right
+/// by one bit.
+/// ## Processor Status after use:
+/// - C - Carry Flag        - Set to the value of bit 0 before the shift
+/// - Z - Zero Flag         - Set if result is zero
+/// - N - Negative Flag     - Set if bit 7 of result is set
+fn lsr_fn(cpu: &mut Cpu) -> u8 {
+    let mut fetched = cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Carry, fetched & 0x01 != 0);
+
+    let res = fetched >> 1;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, res == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, res & 0x80 != 0);
+
+    match cpu.addressing_mode {
+        AddressingMode::IMP => cpu.a_register = res,
+        _ => cpu.write(cpu.absolute_addr, res),
+    }
+
+    0
+}
+
+/// # No Operation
+/// No Operation. Do nothing
+fn nop_fn(cpu: &mut Cpu) -> u8 {
+    // TODO: verify different no-op opcodes have different cycles
+    // https://wiki.nesdev.com/w/index.php/CPU_unofficial_opcodes
+    // The use of unofficial opcodes is rare in NES games. It appears to occur mostly in late or
+    // unlicensed titles:
+    // - Beauty and the Beast (E) (1994) uses $80 (a 2-byte NOP).[2]
+    // - Disney's Aladdin (E) (December 1994) uses $07 (SLO). This is Virgin's port of the Game Boy
+    // game, itself a port of the Genesis game, not any of the pirate originals.
+    // - Dynowarz: Destruction of Spondylus (April 1990) uses 1-byte NOPs $DA and $FA on the first
+    // level when your dino throws his fist.
+    // - F-117A Stealth Fighter uses $89 (a 2-byte NOP).
+    // - Gaau Hok Gwong Cheung (Ch) uses $8B (XAA immediate) as a 2-byte NOP. The game malfunctions
+    // after selecting Left from the main menu if that instruction is not emulated.
+    // - Infiltrator uses $89 (a 2-byte NOP).
+    // - Puzznic (all regions) (US release November 1990) uses $89 (a 2-byte NOP).
+    // - Super Cars (U) (February 1991) uses $B3 (LAX).
+    // ----------------------------------------------
+    0
+}
+
+/// # Bitwise Or
+/// Performs a bitwise OR on the accumulator and the value in memory; A | M
+/// Stores result back in accumulator
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if result is zero
+/// - N - Negative Flag     - Set if bit 7 of result is set
+fn ora_fn(cpu: &mut Cpu) -> u8 {
+    cpu.a_register |= cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+
+    1
+}
+
+/// # Push Accumulator
+/// Pushes the accumulator onto the stack
+fn pha_fn(cpu: &mut Cpu) -> u8 {
+    cpu.push_stack(cpu.a_register);
+    0
+}
+
+/// # Push Status Register
+/// Pushes the status register onto the stack
+/// ## Processor Status after use:
+/// - B - Break Flag        - Set to 1 before pushing. Unset after
+/// - U - Unused Flag       - Set to 1 before pushing. Unset after TODO: verify
+fn php(cpu: &mut Cpu) -> u8 {
+    cpu.push_stack(cpu.status_register | CpuFlag::Break as u8 | CpuFlag::Unused as u8);
+    cpu.clear_flag(&CpuFlag::Break);
+    cpu.clear_flag(&CpuFlag::Unused);
+    0
+}
+
+/// # Pull Accumulator
+/// Pulls top value from the stack, into the accumulator
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if result is zero
+/// - N - Negative Flag     - Set if bit 7 of result is set
+fn pla(cpu: &mut Cpu) -> u8 {
+    cpu.a_register = cpu.pop_stack();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+    0
+}
+
+
+/// # Pull Status Register
+/// Pulls top value from the stack, into the status register
+/// ## Processor Status after use:
+/// - U - Unused Flag       - Set to 1 after pulling. TODO: verify
+fn plp(cpu: &mut Cpu) -> u8 {
+    cpu.a_register = cpu.pop_stack();
+    cpu.set_flag(&CpuFlag::Unused);
+    0
+}
+
+/// # Rotate Left
+/// Shift the bits in A or M (depending on addressing mode) to the left by one
+/// place. Result stored back in A or M
+/// Bit 0 is filled with the current value of the carry flag whilst the old bit 7
+/// becomes the new carry flag value.
+/// ## Processor Status after use:
+/// - C - Carry Flag        - Set to the value of bit 7 before the shift
+/// - Z - Zero Flag         - Set if result is zero
+/// - N - Negative Flag     - Set if bit 7 of result is set
+fn rol_fn(cpu: &mut Cpu) -> u8 {
+    let res: u16 = (cpu.fetch() as u16) << 1 | cpu.get_flag(&CpuFlag::Carry) as u16;
+
+    cpu.set_or_clear_flag(&CpuFlag::Zero, res == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Carry, res & 0xFF00 != 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, res & 0x80 != 0);
+
+    match cpu.addressing_mode {
+        AddressingMode::IMP => cpu.a_register = res as u8,
+        _ => cpu.write(cpu.absolute_addr, (res & 0x00FF) as u8),
+    };
+
+    0
+}
+
+/// # Rotate Right
+/// Shift the bits in A or M (depending on addressing mode) to the right by one
+/// place. Result Stored back in A or M
+/// ## Processor Status after use:
+/// - C - Carry Flag        - Set to the value of bit 0 before the shift
+/// - Z - Zero Flag         - Set if result is zero
+/// - N - Negative Flag     - Set if bit 7 of result is set
+fn ror_fn(cpu: &mut Cpu) -> u8 {
+    let fetched = cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Carry, fetched & 0x01 != 0);
+
+    let res = (fetched >> 1) | (cpu.get_flag(&CpuFlag::Carry) as u8) << 7;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, res == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, res & 0x80 != 0);
+
+    match cpu.addressing_mode {
+        AddressingMode::IMP => cpu.a_register = res,
+        _ => cpu.write(cpu.absolute_addr, res),
+    };
+
+    0
+}
+
+/// # Return from Interrupt
+/// Used at the end of a interrupt routine to return to the main program.
+/// Pulls status and program counter from the stac
+/// ## Processor Status after use:
+/// - C - Carry Flag        - Set from stack
+/// - Z - Zero Flag         - Set from stack
+/// - I - Interrupt Flag    - Set from stack
+/// - D - Decimal Flag      - Set from stack
+/// - B - Break Flag        - Set from stack
+/// - V - Overflow Flag     - Set from stack
+/// - N - Negative Flag     - Set from stack
+fn rti_fn(cpu: &mut Cpu) -> u8 {
+
+    cpu.status_register = cpu.pop_stack();
+
+    // Unset Break and Unused since out of interrupt
+    cpu.clear_flag(&CpuFlag::Break);
+    cpu.clear_flag(&CpuFlag::Unused);
+
+    let lo = cpu.pop_stack() as u16;
+    let hi = cpu.pop_stack() as u16;
+    cpu.program_counter = (hi << 8) | lo;
+
+    0
+}
+
+/// # Return from Subroutine
+/// Used at the end of a subroutine to return to the calling routine.
+/// Pulls (program counter - 1) from the stack.
+fn rts_fn(cpu: &mut Cpu) -> u8 {
+    let lo = cpu.pop_stack() as u16;
+    let hi = cpu.pop_stack() as u16;
+    cpu.program_counter = (hi << 8 | lo) + 1;
+    0
 }
 
 
