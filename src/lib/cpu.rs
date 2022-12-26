@@ -53,6 +53,9 @@ pub struct Cpu {
 }
 
 impl Cpu {
+
+    pub const STACK_BASE: u16 = 0x0100;
+
     pub fn new() -> RcCell<Self> {
         let tmp_bus = Rc::new(RefCell::new(Bus::default()));
 
@@ -122,6 +125,12 @@ impl Cpu {
     #[inline(always)]
     pub fn write(&mut self, address: u16, data: u8) {
         self.bus.borrow_mut().write(address, data)
+    }
+
+    #[inline(always)]
+    pub fn push_stack(&mut self, data: u8) {
+        self.write(Cpu::STACK_BASE + self.stack_pointer as u16, data);
+        self.stack_pointer -= 1;
     }
 
     #[inline(always)]

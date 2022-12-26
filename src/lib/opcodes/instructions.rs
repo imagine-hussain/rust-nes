@@ -387,4 +387,78 @@ fn dey_fn(cpu: &mut Cpu) -> u8 {
     0
 }
 
+/// # Exclusive Or (A ^ M)
+/// Perform a bitwise exclusive or between the accumulator and the value in memory.
+/// The result is stored back in the accumulator.
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if result is zero
+/// - N - Negative Flag     - Set if bit 7 of result is set
+fn eor_fn(cpu: &mut Cpu) -> u8 {
+    cpu.a_register ^= cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+    1
+}
+
+
+/// # Increment Memory
+/// Add one to the value at the memory address.
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if result is zero
+/// - N - Negative Flag     - Set if bit 7 of result is set
+fn inc_fn(cpu: &mut Cpu) -> u8 {
+    let res = cpu.fetch() + 1;
+    cpu.write(cpu.absolute_addr + 1, res);
+
+    cpu.set_or_clear_flag(&CpuFlag::Zero, res == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, res & 0x80 != 0);
+    0
+}
+
+/// # Increment X Register
+/// Adds one to the X register setting the zero and negative flags as appropriate.
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if X == 0
+/// - N - Negative Flag     - Set if bit 7 of X is set
+fn inx_fn(cpu: &mut Cpu) -> u8 {
+    cpu.x_register = cpu.x_register.wrapping_add(1);
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
+    0
+}
+
+/// # Increment y Register
+/// Adds one to the y register setting the zero and negative flags as appropriate.
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if y == 0
+/// - N - Negative Flag     - Set if bit 7 of y is set
+fn iny_fn(cpu: &mut Cpu) -> u8 {
+    cpu.y_register = cpu.x_register.wrapping_add(1);
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
+    0
+}
+
+/// # Jump to Address
+/// Sets the program counter to the address specified.
+fn jmp_fn(cpu: &mut Cpu) -> u8 {
+    cpu.program_counter = cpu.absolute_addr;
+    0
+}
+
+/// # Jump to Subroutine
+/// Pushes the program_counter to the stack and then sets the program_counter
+/// to the address specified.
+fn jsr_fn(cpu: &mut Cpu) -> u8 {
+    cpu.program_counter -= 1;
+
+    // Push Hi and Lo Seperately
+    cpu.push_stack((cpu.program_counter >> 8 & 0x00FF) as u8);
+    cpu.push_stack((cpu.program_counter & 0x00FF) as u8);
+
+    cpu.program_counter = cpu.absolute_addr;
+
+    0
+}
+
 
