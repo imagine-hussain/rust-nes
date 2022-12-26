@@ -1,5 +1,5 @@
-use super::opcode_types::OpCodeType;
-use crate::addressing::AddressingMode;
+use crate::cpu::AddressingMode;
+use crate::opcodes::OpCodeType;
 
 #[derive(Debug)]
 pub struct OpCode {

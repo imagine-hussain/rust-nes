@@ -1,6 +1,6 @@
-use super::opcode::OpCode;
-use crate::addressing::AddressingMode::*;
-use crate::opcodes::opcode_types::OpCodeType::*;
+use super::OpCode;
+use crate::cpu::AddressingMode::*;
+use crate::opcodes::OpCodeType::*;
 
 impl From<u8> for OpCode {
     fn from(raw: u8) -> Self {

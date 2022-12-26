@@ -1,4 +1,4 @@
-use crate::{cpu::Cpu, RcCell, WeakCell};
+use crate::{Cpu, RcCell, WeakCell};
 
 pub struct Bus {
     pub cpu: WeakCell<Cpu>,

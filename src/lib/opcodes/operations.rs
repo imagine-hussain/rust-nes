@@ -2,7 +2,9 @@
 ///
 /// Documentation from:
 /// https://www.nesdev.org/obelisk-6502-guide/reference.html
-use crate::{cpu::CpuFlag, AddressingMode, Cpu};
+use crate::Cpu;
+use crate::cpu::CpuFlag;
+use crate::cpu::AddressingMode;
 
 /// # Add with carry
 ///
