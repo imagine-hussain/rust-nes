@@ -2,10 +2,12 @@ mod bus;
 mod cpu;
 mod nes;
 mod opcodes;
+mod clock;
 
 pub use bus::Bus;
 pub use cpu::Cpu;
 pub use nes::Nes;
+pub use clock::Clock;
 
 use std::{
     cell::RefCell,

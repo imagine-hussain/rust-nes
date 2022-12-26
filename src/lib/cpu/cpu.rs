@@ -1,9 +1,10 @@
 use crate::{
+    clock::Clock,
     cpu::{
         flags::{clear_flag, set_flag, CpuFlag},
         AddressingMode,
     },
-    Bus, RcCell,
+    Bus, RcCell, opcodes::OpCode,
 };
 use std::{cell::RefCell, rc::Rc};
 
@@ -40,7 +41,7 @@ use std::{cell::RefCell, rc::Rc};
 /// Status: Status register
 pub struct Cpu {
     pub bus: RcCell<Bus>,
-    pub clock: usize,
+    pub clock: Clock,
     pub a_register: u8,       // Accumulator
     pub x_register: u8,       // X Register
     pub y_register: u8,       // Y Register
@@ -53,6 +54,8 @@ pub struct Cpu {
     pub absolute_addr: u16,   // Absolute address being read off
     pub relative_addr: i8,    // Address relative to abs address
     pub addressing_mode: AddressingMode, // Addressing mode
+    pub additional_cycle_addrmode: u8, // Additional cycles for addressing mode
+    pub additional_cycle_operation: u8, // Additional cycles for operation
 }
 
 impl Cpu {
@@ -63,7 +66,7 @@ impl Cpu {
 
         let new_cpu = Rc::new(RefCell::new(Self {
             bus: tmp_bus,
-            clock: 0,
+            clock: Clock::default(),
             a_register: 0,
             x_register: 0,
             y_register: 0,
@@ -85,33 +88,54 @@ impl Cpu {
         new_cpu
     }
 
+    /// Emulate a single clock cycle. This does not translate to one
+    /// instruction.
+    /// The CPU will execute an instruction over multiple clock cycles.
+    /// However, the emulation occurs on a per-instruction basis, rather
+    /// than a per-clock cycle basis.
+    /// As such, if an instructions takes `n` clock cycles, `1` call of this
+    /// will execute the instruction and there will be `n - 1` calls to this
+    /// that do nothing (except increment the clock).
+    pub fn execute_clock_cycle(&mut self) {
+        // Not ready yet.
+        if !self.clock.tick() {
+            return;
+        }
+
+        // Fetch next instruction
+        let opcode: OpCode = self.read(self.program_counter).into();
+        self.program_counter += 1;
+
+        // Always unused
+        self.set_flag(&CpuFlag::Unused);
+
+        // Initial (minimum) amount of cycles - May be extra later
+        self.clock.set_cycles(opcode.cycles as u64);
+
+        // Addressing Mode Lookup for `absolute_addr` or `relative_addr`
+        self.addressing_mode = opcode.addressing_mode;
+        // FIXME: Not sure if this is going to break things by doing a pre-emptive
+        // fetch of the data, since the operation_fn also fetches.
+        // PC may move out of sync.
+        // Might want to do this in the actual addressing mode functions.
+        self.additional_cycle_addrmode = opcode.addressing_mode.fetch()(self);
+
+        // Do the operation
+        self.additional_cycle_operation = opcode.code_type.executable()(self);
+
+        // Calculate total cycles;
+        // Refactor: Don't use members but actually return / pass the data around
+        let additional_cycles = self.additional_cycle_operation & self.additional_cycle_addrmode;
+
+        self.clock.tick();
+    }
+
     /// Fetch based on the current addressing mode. Stored in `self.fetched_data`
     /// Also returns the fetched_data
     pub fn fetch(&mut self) -> u8 {
         // todo: special case for imp
         self.addressing_mode.fetch()(self);
         self.fetched_data
-    }
-
-    pub fn execute_clock_cycle(&mut self) {
-        // Fetch
-        // let raw_opcode = self.read(self.program_counter);
-        // self.program_counter += 1;
-        //
-        // // Set unused flag
-        // self.status_register = set_flag(CpuFlag::Unused, self.status_register);
-        // let opcode: OpCodeType = raw_opcode.into();
-        //
-        // // Execute what is required for the operation including address mode operations
-        // let additional_cycle_addrmode = opcode.addr_mode(self);
-        // let additional_cycle_operation = opcode.execute(self);
-        // if additional_cycle_addrmode && additional_cycle_operation {
-        //     self.clock += 1;
-        // }
-
-        // Decode
-        // Execute
-        // Increment PC
     }
 
     #[inline(always)]
@@ -139,16 +163,6 @@ impl Cpu {
     pub fn pop_stack(&mut self) -> u8 {
         self.stack_pointer += 1;
         self.read(Cpu::STACK_BASE + self.stack_pointer as u16)
-    }
-
-    #[inline(always)]
-    pub fn clock(&mut self) {
-        self.clock += 1
-    }
-
-    #[inline(always)]
-    pub fn clock_n(&mut self, cycles: usize) {
-        self.clock += cycles
     }
 
     pub fn reset() {
