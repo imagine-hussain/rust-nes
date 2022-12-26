@@ -14,7 +14,7 @@ use crate::{cpu::CpuFlag, AddressingMode, Cpu};
 /// Z    Zero Flag      - Set if A = 0
 /// V    Overflow Flag  - Set if sign bit is incorrect
 /// N    Negative Flag  - Set if bit 7 set
-fn adc_fn(cpu: &mut Cpu) -> u8 {
+pub fn adc_fn(cpu: &mut Cpu) -> u8 {
     let fetched = cpu.fetch();
 
     // add as u16 for overflow detection
@@ -48,7 +48,7 @@ fn adc_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if A = 0
 /// - V - Overflow Flag     - Set if sign bit is incorrect
 /// - N - Negative Flag     - Set if bit 7 set
-fn sbc_fn(cpu: &mut Cpu) -> u8 {
+pub fn sbc_fn(cpu: &mut Cpu) -> u8 {
     // Take compliment and treat as addition
     let fetched = cpu.fetch() ^ 0xFF;
 
@@ -80,7 +80,7 @@ fn sbc_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if A = 0
 /// - N - Negative Flag     - Set if bit 7 set
-fn and_fn(cpu: &mut Cpu) -> u8 {
+pub fn and_fn(cpu: &mut Cpu) -> u8 {
     let fetched = cpu.fetch();
 
     let res = cpu.a_register & fetched;
@@ -97,7 +97,7 @@ fn and_fn(cpu: &mut Cpu) -> u8 {
 /// - C - Carry Flag        - Multiplying result overflows 8bit register
 /// - Z - Zero Flag         - Set if A = 0
 /// - N - Negative Flag     - Set if bit 7 of result set
-fn asl_fn(cpu: &mut Cpu) -> u8 {
+pub fn asl_fn(cpu: &mut Cpu) -> u8 {
     let raw_res: u16 = (cpu.fetch() as u16) << 0x01;
     let result: u8 = (raw_res & 0xFF) as u8;
 
@@ -117,7 +117,7 @@ fn asl_fn(cpu: &mut Cpu) -> u8 {
 /// Helper for branching.
 /// Returns 1 extra cycle if branch occurs to the same page.
 /// 2 Extra cycles if branch is onto a different bage
-fn relative_branch(cpu: &mut Cpu) -> u8 {
+pub fn relative_branch(cpu: &mut Cpu) -> u8 {
     let pc_old = cpu.program_counter;
     cpu.program_counter = (cpu.program_counter as u16) + (cpu.relative_addr as i16) as u16;
 
@@ -137,7 +137,7 @@ fn relative_branch(cpu: &mut Cpu) -> u8 {
 /// ## Cycles:
 /// +1 if branch occurs
 /// +2 if branch occurs to a new page
-fn bcc_fn(cpu: &mut Cpu) -> u8 {
+pub fn bcc_fn(cpu: &mut Cpu) -> u8 {
     match cpu.get_flag(&CpuFlag::Carry) {
         true => 0,
         false => relative_branch(cpu),
@@ -154,7 +154,7 @@ fn bcc_fn(cpu: &mut Cpu) -> u8 {
 /// ## Cycles:
 /// +1 if branch occurs
 /// +2 if branch occurs to a new page
-fn bcs_fn(cpu: &mut Cpu) -> u8 {
+pub fn bcs_fn(cpu: &mut Cpu) -> u8 {
     match cpu.get_flag(&CpuFlag::Carry) {
         true => relative_branch(cpu),
         false => 0,
@@ -169,7 +169,7 @@ fn bcs_fn(cpu: &mut Cpu) -> u8 {
 /// ## Cycles:
 /// +1 if branch occurs
 /// +2 if branch occurs to a new page
-fn beq_fn(cpu: &mut Cpu) -> u8 {
+pub fn beq_fn(cpu: &mut Cpu) -> u8 {
     match cpu.get_flag(&CpuFlag::Zero) {
         true => relative_branch(cpu),
         false => 0,
@@ -184,7 +184,7 @@ fn beq_fn(cpu: &mut Cpu) -> u8 {
 /// ## Cycles:
 /// +1 if branch occurs
 /// +2 if branch occurs to a new page
-fn bne_fn(cpu: &mut Cpu) -> u8 {
+pub fn bne_fn(cpu: &mut Cpu) -> u8 {
     match cpu.get_flag(&CpuFlag::Zero) {
         true => 0,
         false => relative_branch(cpu),
@@ -199,7 +199,7 @@ fn bne_fn(cpu: &mut Cpu) -> u8 {
 /// ## Cycles:
 /// +1 if branch occurs
 /// +2 if branch occurs to a new page
-fn bmi_fn(cpu: &mut Cpu) -> u8 {
+pub fn bmi_fn(cpu: &mut Cpu) -> u8 {
     match cpu.get_flag(&CpuFlag::Negative) {
         true => relative_branch(cpu),
         false => 0,
@@ -214,11 +214,37 @@ fn bmi_fn(cpu: &mut Cpu) -> u8 {
 /// ## Cycles:
 /// +1 if branch occurs
 /// +2 if branch occurs to a new page
-fn bpl_fn(cpu: &mut Cpu) -> u8 {
+pub fn bpl_fn(cpu: &mut Cpu) -> u8 {
     match cpu.get_flag(&CpuFlag::Negative) {
         true => 0,
         false => relative_branch(cpu),
     }
+}
+
+/// # BRK - Force Interrupt
+/// The BRK instruction forces the generation of an interrupt request. The program counter and
+/// processor status are pushed on the stack then the IRQ interrupt vector at $FFFE/F is loaded
+/// into the PC and the break flag in the status set to one.
+pub fn brk_fn(cpu: &mut Cpu) -> u8 {
+    cpu.program_counter += 1;
+    cpu.set_flag(&CpuFlag::Interrupt);
+
+    // Push PC to stack (2 bytes)
+    let hi = (cpu.program_counter >> 8) as u8;
+    let lo = cpu.program_counter as u8;
+    cpu.push_stack(hi);
+    cpu.push_stack(lo);
+
+    // Push status register but, with the break flag set
+    cpu.set_flag(&CpuFlag::Break);
+    cpu.push_stack(cpu.status_register);
+    cpu.clear_flag(&CpuFlag::Break);
+
+    // Load PC from interrupt vector (Last 2 bytes of address space)
+
+
+
+    0
 }
 
 /// # Branch if Overflow Clear
@@ -229,7 +255,7 @@ fn bpl_fn(cpu: &mut Cpu) -> u8 {
 /// ## Cycles:
 /// +1 if branch occurs
 /// +2 if branch occurs to a new page
-fn bvc_fn(cpu: &mut Cpu) -> u8 {
+pub fn bvc_fn(cpu: &mut Cpu) -> u8 {
     match cpu.get_flag(&CpuFlag::Overflow) {
         true => 0,
         false => relative_branch(cpu),
@@ -244,7 +270,7 @@ fn bvc_fn(cpu: &mut Cpu) -> u8 {
 /// ## Cycles:
 /// +1 if branch occurs
 /// +2 if branch occurs to a new page
-fn bvs_fn(cpu: &mut Cpu) -> u8 {
+pub fn bvs_fn(cpu: &mut Cpu) -> u8 {
     match cpu.get_flag(&CpuFlag::Overflow) {
         false => 0,
         true => relative_branch(cpu),
@@ -260,7 +286,7 @@ fn bvs_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
 /// - V - Overflow Flag     - Set if bit 6 of result is set
-fn bit_fn(cpu: &mut Cpu) -> u8 {
+pub fn bit_fn(cpu: &mut Cpu) -> u8 {
     let fetched = cpu.fetch();
     let result = cpu.a_register & fetched;
 
@@ -275,7 +301,7 @@ fn bit_fn(cpu: &mut Cpu) -> u8 {
 /// Set the carry flag to 0
 /// ## Processor Status after use:
 /// - C - Carry Flag        - Set to 0
-fn clc_fn(cpu: &mut Cpu) -> u8 {
+pub fn clc_fn(cpu: &mut Cpu) -> u8 {
     cpu.clear_flag(&CpuFlag::Carry);
     0
 }
@@ -284,7 +310,7 @@ fn clc_fn(cpu: &mut Cpu) -> u8 {
 /// Set the decimal flag to 0
 /// ## Processor Status after use:
 /// - D - Decimal Flag      - Set to 0
-fn cld_fn(cpu: &mut Cpu) -> u8 {
+pub fn cld_fn(cpu: &mut Cpu) -> u8 {
     cpu.clear_flag(&CpuFlag::Decimal);
     0
 }
@@ -293,7 +319,7 @@ fn cld_fn(cpu: &mut Cpu) -> u8 {
 /// Set the interrupt disable flag to 0
 /// ## Processor Status after use:
 /// - I - Interrupt Disable - Set to 0
-fn cli_fn(cpu: &mut Cpu) -> u8 {
+pub fn cli_fn(cpu: &mut Cpu) -> u8 {
     cpu.clear_flag(&CpuFlag::Interrupt);
     0
 }
@@ -302,7 +328,7 @@ fn cli_fn(cpu: &mut Cpu) -> u8 {
 /// Set the overflow flag to 0
 /// ## Processor Status after use:
 /// - V - Overflow Flag     - Set to 0
-fn clv_fn(cpu: &mut Cpu) -> u8 {
+pub fn clv_fn(cpu: &mut Cpu) -> u8 {
     cpu.clear_flag(&CpuFlag::Overflow);
     0
 }
@@ -316,7 +342,7 @@ fn clv_fn(cpu: &mut Cpu) -> u8 {
 /// - N - Negative Flag     - Set if bit 7 of A - M is set
 /// ## Cycles:
 /// +1 if page crosses in certain addressing modes
-fn cmp_fn(cpu: &mut Cpu) -> u8 {
+pub fn cmp_fn(cpu: &mut Cpu) -> u8 {
     compare_values(cpu, cpu.a_register);
     1
 }
@@ -328,7 +354,7 @@ fn cmp_fn(cpu: &mut Cpu) -> u8 {
 /// - C - Carry Flag        - Set if X >= M
 /// - Z - Zero Flag         - Set if X == M
 /// - N - Negative Flag     - Set if bit 7 of X - M is set
-fn cpx_fn(cpu: &mut Cpu) -> u8 {
+pub fn cpx_fn(cpu: &mut Cpu) -> u8 {
     compare_values(cpu, cpu.x_register);
     0
 }
@@ -340,7 +366,7 @@ fn cpx_fn(cpu: &mut Cpu) -> u8 {
 /// - C - Carry Flag        - Set if Y >= M
 /// - Z - Zero Flag         - Set if Y == M
 /// - N - Negative Flag     - Set if bit 7 of Y - M is set
-fn cpy_fn(cpu: &mut Cpu) -> u8 {
+pub fn cpy_fn(cpu: &mut Cpu) -> u8 {
     compare_values(cpu, cpu.y_register);
     0
 }
@@ -350,7 +376,7 @@ fn cpy_fn(cpu: &mut Cpu) -> u8 {
 /// - C - Carry Flag        - Set if Register >= M
 /// - Z - Zero Flag         - Set if Register == M
 /// - N - Negative Flag     - Set if bit 7 of Register - M is set
-fn compare_values(cpu: &mut Cpu, register_val: u8) {
+pub fn compare_values(cpu: &mut Cpu, register_val: u8) {
     let rhs_val = cpu.fetch();
     let result = ((register_val as u16 - rhs_val as u16) & 0x00FF) as u8;
     cpu.set_or_clear_flag(&CpuFlag::Carry, register_val >= rhs_val);
@@ -358,12 +384,25 @@ fn compare_values(cpu: &mut Cpu, register_val: u8) {
     cpu.set_or_clear_flag(&CpuFlag::Negative, result & 0x80 != 0);
 }
 
+/// # Decrement Memory
+/// Decrement the value at a memory location by 1.
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if result is zero
+/// - N - Negative Flag     - Set if bit 7 of result is set
+pub fn dec_fn(cpu: &mut Cpu) -> u8 {
+    let res = cpu.fetch().wrapping_sub(1);
+    cpu.set_or_clear_flag(&CpuFlag::Zero, res == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, res & 0x80 != 0);
+
+    0
+}
+
 /// # Decrement X Register
 /// Subtracts one from the X register setting the zero and negative flags as appropriate.
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if X == 0
 /// - N - Negative Flag     - Set if bit 7 of X is set
-fn dex_fn(cpu: &mut Cpu) -> u8 {
+pub fn dex_fn(cpu: &mut Cpu) -> u8 {
     cpu.x_register = cpu.x_register.wrapping_sub(1);
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
@@ -375,7 +414,7 @@ fn dex_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if y == 0
 /// - N - Negative Flag     - Set if bit 7 of y is set
-fn dey_fn(cpu: &mut Cpu) -> u8 {
+pub fn dey_fn(cpu: &mut Cpu) -> u8 {
     cpu.y_register = cpu.x_register.wrapping_sub(1);
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
@@ -388,7 +427,7 @@ fn dey_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
-fn eor_fn(cpu: &mut Cpu) -> u8 {
+pub fn eor_fn(cpu: &mut Cpu) -> u8 {
     cpu.a_register ^= cpu.fetch();
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
@@ -400,7 +439,7 @@ fn eor_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
-fn inc_fn(cpu: &mut Cpu) -> u8 {
+pub fn inc_fn(cpu: &mut Cpu) -> u8 {
     let res = cpu.fetch() + 1;
     cpu.write(cpu.absolute_addr + 1, res);
 
@@ -414,7 +453,7 @@ fn inc_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if X == 0
 /// - N - Negative Flag     - Set if bit 7 of X is set
-fn inx_fn(cpu: &mut Cpu) -> u8 {
+pub fn inx_fn(cpu: &mut Cpu) -> u8 {
     cpu.x_register = cpu.x_register.wrapping_add(1);
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
@@ -426,7 +465,7 @@ fn inx_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if y == 0
 /// - N - Negative Flag     - Set if bit 7 of y is set
-fn iny_fn(cpu: &mut Cpu) -> u8 {
+pub fn iny_fn(cpu: &mut Cpu) -> u8 {
     cpu.y_register = cpu.x_register.wrapping_add(1);
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
@@ -435,7 +474,7 @@ fn iny_fn(cpu: &mut Cpu) -> u8 {
 
 /// # Jump to Address
 /// Sets the program counter to the address specified.
-fn jmp_fn(cpu: &mut Cpu) -> u8 {
+pub fn jmp_fn(cpu: &mut Cpu) -> u8 {
     cpu.program_counter = cpu.absolute_addr;
     0
 }
@@ -443,7 +482,7 @@ fn jmp_fn(cpu: &mut Cpu) -> u8 {
 /// # Jump to Subroutine
 /// Pushes the program_counter to the stack and then sets the program_counter
 /// to the address specified.
-fn jsr_fn(cpu: &mut Cpu) -> u8 {
+pub fn jsr_fn(cpu: &mut Cpu) -> u8 {
     cpu.program_counter -= 1;
 
     // Push Hi and Lo Seperately
@@ -460,7 +499,7 @@ fn jsr_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
-fn lda_fn(cpu: &mut Cpu) -> u8 {
+pub fn lda_fn(cpu: &mut Cpu) -> u8 {
     cpu.a_register = cpu.fetch();
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
@@ -473,7 +512,7 @@ fn lda_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
-fn ldx_fn(cpu: &mut Cpu) -> u8 {
+pub fn ldx_fn(cpu: &mut Cpu) -> u8 {
     cpu.x_register = cpu.fetch();
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
@@ -486,7 +525,7 @@ fn ldx_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
-fn ldy_fn(cpu: &mut Cpu) -> u8 {
+pub fn ldy_fn(cpu: &mut Cpu) -> u8 {
     cpu.y_register = cpu.fetch();
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
@@ -501,7 +540,7 @@ fn ldy_fn(cpu: &mut Cpu) -> u8 {
 /// - C - Carry Flag        - Set to the value of bit 0 before the shift
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
-fn lsr_fn(cpu: &mut Cpu) -> u8 {
+pub fn lsr_fn(cpu: &mut Cpu) -> u8 {
     let mut fetched = cpu.fetch();
     cpu.set_or_clear_flag(&CpuFlag::Carry, fetched & 0x01 != 0);
 
@@ -519,7 +558,7 @@ fn lsr_fn(cpu: &mut Cpu) -> u8 {
 
 /// # No Operation
 /// No Operation. Do nothing
-fn nop_fn(cpu: &mut Cpu) -> u8 {
+pub fn nop_fn(cpu: &mut Cpu) -> u8 {
     // TODO: verify different no-op opcodes have different cycles
     // https://wiki.nesdev.com/w/index.php/CPU_unofficial_opcodes
     // The use of unofficial opcodes is rare in NES games. It appears to occur mostly in late or
@@ -545,7 +584,7 @@ fn nop_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
-fn ora_fn(cpu: &mut Cpu) -> u8 {
+pub fn ora_fn(cpu: &mut Cpu) -> u8 {
     cpu.a_register |= cpu.fetch();
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
@@ -555,7 +594,7 @@ fn ora_fn(cpu: &mut Cpu) -> u8 {
 
 /// # Push Accumulator
 /// Pushes the accumulator onto the stack
-fn pha_fn(cpu: &mut Cpu) -> u8 {
+pub fn pha_fn(cpu: &mut Cpu) -> u8 {
     cpu.push_stack(cpu.a_register);
     0
 }
@@ -565,7 +604,7 @@ fn pha_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - B - Break Flag        - Set to 1 before pushing. Unset after
 /// - U - Unused Flag       - Set to 1 before pushing. Unset after TODO: verify
-fn php(cpu: &mut Cpu) -> u8 {
+pub fn php_fn(cpu: &mut Cpu) -> u8 {
     cpu.push_stack(cpu.status_register | CpuFlag::Break as u8 | CpuFlag::Unused as u8);
     cpu.clear_flag(&CpuFlag::Break);
     cpu.clear_flag(&CpuFlag::Unused);
@@ -577,7 +616,7 @@ fn php(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
-fn pla(cpu: &mut Cpu) -> u8 {
+pub fn pla_fn(cpu: &mut Cpu) -> u8 {
     cpu.a_register = cpu.pop_stack();
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
@@ -589,7 +628,7 @@ fn pla(cpu: &mut Cpu) -> u8 {
 /// Pulls top value from the stack, into the status register
 /// ## Processor Status after use:
 /// - U - Unused Flag       - Set to 1 after pulling. TODO: verify
-fn plp(cpu: &mut Cpu) -> u8 {
+pub fn plp_fn(cpu: &mut Cpu) -> u8 {
     cpu.a_register = cpu.pop_stack();
     cpu.set_flag(&CpuFlag::Unused);
     0
@@ -604,7 +643,7 @@ fn plp(cpu: &mut Cpu) -> u8 {
 /// - C - Carry Flag        - Set to the value of bit 7 before the shift
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
-fn rol_fn(cpu: &mut Cpu) -> u8 {
+pub fn rol_fn(cpu: &mut Cpu) -> u8 {
     let res: u16 = (cpu.fetch() as u16) << 1 | cpu.get_flag(&CpuFlag::Carry) as u16;
 
     cpu.set_or_clear_flag(&CpuFlag::Zero, res == 0);
@@ -626,7 +665,7 @@ fn rol_fn(cpu: &mut Cpu) -> u8 {
 /// - C - Carry Flag        - Set to the value of bit 0 before the shift
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
-fn ror_fn(cpu: &mut Cpu) -> u8 {
+pub fn ror_fn(cpu: &mut Cpu) -> u8 {
     let fetched = cpu.fetch();
     cpu.set_or_clear_flag(&CpuFlag::Carry, fetched & 0x01 != 0);
 
@@ -653,7 +692,7 @@ fn ror_fn(cpu: &mut Cpu) -> u8 {
 /// - B - Break Flag        - Set from stack
 /// - V - Overflow Flag     - Set from stack
 /// - N - Negative Flag     - Set from stack
-fn rti_fn(cpu: &mut Cpu) -> u8 {
+pub fn rti_fn(cpu: &mut Cpu) -> u8 {
 
     cpu.status_register = cpu.pop_stack();
 
@@ -671,7 +710,7 @@ fn rti_fn(cpu: &mut Cpu) -> u8 {
 /// # Return from Subroutine
 /// Used at the end of a subroutine to return to the calling routine.
 /// Pulls (program counter - 1) from the stack.
-fn rts_fn(cpu: &mut Cpu) -> u8 {
+pub fn rts_fn(cpu: &mut Cpu) -> u8 {
     let lo = cpu.pop_stack() as u16;
     let hi = cpu.pop_stack() as u16;
     cpu.program_counter = (hi << 8 | lo) + 1;
@@ -682,7 +721,7 @@ fn rts_fn(cpu: &mut Cpu) -> u8 {
 /// Sets the carry flag to 1
 /// ## Processor Status after use:
 /// - C - Carry Flag        - Set to 1
-fn sec_fn(cpu: &mut Cpu) -> u8 {
+pub fn sec_fn(cpu: &mut Cpu) -> u8 {
     cpu.set_flag(&CpuFlag::Carry);
     0
 }
@@ -691,7 +730,7 @@ fn sec_fn(cpu: &mut Cpu) -> u8 {
 /// Sets the decimal flag to 1
 /// ## Processor Status after use:
 /// - D - Decimal Flag      - Set to 1
-fn sed_fn(cpu: &mut Cpu) -> u8 {
+pub fn sed_fn(cpu: &mut Cpu) -> u8 {
     cpu.set_flag(&CpuFlag::Decimal);
     0
 }
@@ -700,14 +739,14 @@ fn sed_fn(cpu: &mut Cpu) -> u8 {
 /// Sets the interrupt disable flag to 1
 /// ## Processor Status after use:
 /// - I - Interrupt Flag    - Set to 1
-fn sei_fn(cpu: &mut Cpu) -> u8 {
+pub fn sei_fn(cpu: &mut Cpu) -> u8 {
     cpu.set_flag(&CpuFlag::Interrupt);
     0
 }
 
 /// # Store Accumulator
 /// Stores the contents of the accumulator into memory
-fn sta_fn(cpu: &mut Cpu) -> u8 {
+pub fn sta_fn(cpu: &mut Cpu) -> u8 {
     cpu.write(cpu.absolute_addr, cpu.a_register);
     0
 }
@@ -715,14 +754,14 @@ fn sta_fn(cpu: &mut Cpu) -> u8 {
 
 /// # Store X Register
 /// Stores the contents of X into memory
-fn stx_fn(cpu: &mut Cpu) -> u8 {
+pub fn stx_fn(cpu: &mut Cpu) -> u8 {
     cpu.write(cpu.absolute_addr, cpu.x_register);
     0
 }
 
 /// # Store Y Register
 /// Stores the contents of Y into memory
-fn sty_fn(cpu: &mut Cpu) -> u8 {
+pub fn sty_fn(cpu: &mut Cpu) -> u8 {
     cpu.write(cpu.absolute_addr, cpu.y_register);
     0
 }
@@ -732,7 +771,7 @@ fn sty_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if X is zero
 /// - N - Negative Flag     - Set if bit 7 of X is set
-fn tax_fn(cpu: &mut Cpu) -> u8 {
+pub fn tax_fn(cpu: &mut Cpu) -> u8 {
     cpu.x_register = cpu.a_register;
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
@@ -744,7 +783,7 @@ fn tax_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if Y is zero
 /// - N - Negative Flag     - Set if bit 7 of Y is set
-fn tay_fn(cpu: &mut Cpu) -> u8 {
+pub fn tay_fn(cpu: &mut Cpu) -> u8 {
     cpu.y_register = cpu.a_register;
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
@@ -753,7 +792,7 @@ fn tay_fn(cpu: &mut Cpu) -> u8 {
 
 /// Transfer X to Stack Pointer
 /// Copies the contents of the X register into the stack pointer
-fn txs_fn(cpu: &mut Cpu) -> u8 {
+pub fn txs_fn(cpu: &mut Cpu) -> u8 {
     cpu.stack_pointer = cpu.x_register;
     0
 }
@@ -763,7 +802,7 @@ fn txs_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - Z - Zero Flag         - Set if A is zero
 /// - N - Negative Flag     - Set if bit 7 of A is set
-fn tya_fn(cpu: &mut Cpu) -> u8 {
+pub fn tya_fn(cpu: &mut Cpu) -> u8 {
     cpu.a_register = cpu.y_register;
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
