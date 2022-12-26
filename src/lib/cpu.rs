@@ -144,10 +144,12 @@ impl Cpu {
         todo!()
     }
 
+    #[inline]
     pub fn set_flag(&mut self, flag: &CpuFlag) {
         self.status_register = set_flag(&self.status_register, flag)
     }
 
+    #[inline]
     pub fn clear_flag(&mut self, flag: &CpuFlag) {
         self.status_register = clear_flag(&self.status_register, flag)
     }
@@ -155,6 +157,14 @@ impl Cpu {
     #[inline]
     pub fn get_flag(&self, flag: &CpuFlag) -> bool {
         (self.status_register & *flag as u8) != 0
+    }
+
+    pub fn set_or_clear_flag(&mut self, flag: &CpuFlag, set: bool) {
+        if set {
+            self.set_flag(flag)
+        } else {
+            self.clear_flag(flag)
+        }
     }
 
     // fn fetch_data() -> u8 { todo!() }
