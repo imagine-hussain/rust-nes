@@ -10,7 +10,7 @@ use std::{
 };
 
 pub use addressing::AddressingMode;
-pub use opcodes::opcodes::OpCode;
+pub use opcodes::opcode::OpCode;
 
 pub use bus::Bus;
 pub use cpu::Cpu;

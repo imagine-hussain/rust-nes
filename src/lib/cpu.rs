@@ -1,4 +1,4 @@
-use crate::{bus::Bus, opcodes::opcode_types::OpCodeType, AddressingMode, RcCell};
+use crate::{bus::Bus, AddressingMode, RcCell};
 use std::{cell::RefCell, rc::Rc};
 
 /// Emulator for the `6502` CPU.

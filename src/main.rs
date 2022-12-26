@@ -1,12 +1,12 @@
 use lib::{Bus, Cpu, RcCell};
 
 fn main() {
-    let nes = Nes::default();
+    let _nes = Nes::default();
 }
 
-struct Nes {
-    cpu: RcCell<Cpu>,
-    bus: RcCell<Bus>,
+pub struct Nes {
+    pub cpu: RcCell<Cpu>,
+    pub bus: RcCell<Bus>,
 }
 
 impl Nes {
@@ -20,6 +20,6 @@ impl Default for Nes {
         let cpu = Cpu::new();
         let bus = cpu.borrow().get_bus();
 
-        Self { cpu, bus }
+        Self::new(cpu, bus)
     }
 }

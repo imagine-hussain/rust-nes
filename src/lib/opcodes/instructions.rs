@@ -541,7 +541,7 @@ pub fn ldy_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
 pub fn lsr_fn(cpu: &mut Cpu) -> u8 {
-    let mut fetched = cpu.fetch();
+    let fetched = cpu.fetch();
     cpu.set_or_clear_flag(&CpuFlag::Carry, fetched & 0x01 != 0);
 
     let res = fetched >> 1;
@@ -558,7 +558,7 @@ pub fn lsr_fn(cpu: &mut Cpu) -> u8 {
 
 /// # No Operation
 /// No Operation. Do nothing
-pub fn nop_fn(cpu: &mut Cpu) -> u8 {
+pub fn nop_fn(_cpu: &mut Cpu) -> u8 {
     // TODO: verify different no-op opcodes have different cycles
     // https://wiki.nesdev.com/w/index.php/CPU_unofficial_opcodes
     // The use of unofficial opcodes is rare in NES games. It appears to occur mostly in late or

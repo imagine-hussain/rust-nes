@@ -1,4 +1,4 @@
-use super::opcodes::OpCode;
+use super::opcode::OpCode;
 use crate::addressing::AddressingMode::*;
 use crate::opcodes::opcode_types::OpCodeType::*;
 
