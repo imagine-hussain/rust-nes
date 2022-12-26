@@ -7,7 +7,8 @@ pub enum OpCodeType {
     ASL,
     BCC,
     BCS,
-    BEQ, BIT,
+    BEQ,
+    BIT,
     BMI,
     BNE,
     BPL,
@@ -61,12 +62,11 @@ pub enum OpCodeType {
     XXX,
 }
 
-
 impl OpCodeType {
     // pub fn executable(&self) -> &'static dyn Fn(&mut Cpu) -> bool {
     pub fn executable(&self) {
-        use OpCodeType::*;
         use crate::opcodes::instructions::*;
+        use OpCodeType::*;
 
         match *self {
             ADC => adc_fn,

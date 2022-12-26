@@ -24,9 +24,6 @@ use std::{cell::RefCell, rc::Rc};
 
 /// 56 instructions
 /// Care about the size (1-3 bytes) and how many cycles it takes to execute (duration)
-/// First byte lets us know what instruction size we are dealing with
-///
-///
 
 /// Registers:
 /// A: Accumulator

@@ -790,10 +790,34 @@ pub fn tay_fn(cpu: &mut Cpu) -> u8 {
     0
 }
 
-/// Transfer X to Stack Pointer
+/// # Transfer Stack Pointer to X
+/// Copies the contents of the stack pointer into the X register
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if X is zero
+/// - N - Negative Flag     - Set if bit 7 of X is set
+pub fn tsx_fn(cpu: &mut Cpu) -> u8 {
+    cpu.x_register = cpu.stack_pointer;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
+    0
+}
+
+/// # Transfer X to Stack Pointer
 /// Copies the contents of the X register into the stack pointer
 pub fn txs_fn(cpu: &mut Cpu) -> u8 {
     cpu.stack_pointer = cpu.x_register;
+    0
+}
+
+/// # Transfer X to Accumulator
+/// Copies the contents of the X register into the accumulator
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if A is zero
+/// - N - Negative Flag     - Set if bit 7 of A is set
+pub fn txa_fn(cpu: &mut Cpu) -> u8 {
+    cpu.a_register = cpu.x_register;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
     0
 }
 
@@ -806,6 +830,14 @@ pub fn tya_fn(cpu: &mut Cpu) -> u8 {
     cpu.a_register = cpu.y_register;
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+    0
+}
+
+
+/// # Unofficial / Illegal Instructions
+/// Undefined. Should do nothing until implemented later.
+/// Currently, acts equivalently to NOP
+pub fn xxx_fn(_cpu: &mut Cpu) -> u8 {
     0
 }
 
