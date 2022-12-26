@@ -462,3 +462,43 @@ fn jsr_fn(cpu: &mut Cpu) -> u8 {
 }
 
 
+/// # Load Accumulator
+/// Loads a byte into the accumulator from Memory
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if result is zero
+/// - N - Negative Flag     - Set if bit 7 of result is set
+fn lda_fn(cpu: &mut Cpu) -> u8 {
+    cpu.a_register = cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+
+    1
+}
+
+/// # Load X Register
+/// Loads a byte into the X register from Memory
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if result is zero
+/// - N - Negative Flag     - Set if bit 7 of result is set
+fn ldx_fn(cpu: &mut Cpu) -> u8 {
+    cpu.x_register = cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
+
+    1
+}
+
+/// # Load Y Register
+/// Loads a byte into the Y register from Memory
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if result is zero
+/// - N - Negative Flag     - Set if bit 7 of result is set
+fn ldy_fn(cpu: &mut Cpu) -> u8 {
+    cpu.y_register = cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
+
+    1
+}
+
+
