@@ -751,5 +751,22 @@ fn tay_fn(cpu: &mut Cpu) -> u8 {
     0
 }
 
+/// Transfer X to Stack Pointer
+/// Copies the contents of the X register into the stack pointer
+fn txs_fn(cpu: &mut Cpu) -> u8 {
+    cpu.stack_pointer = cpu.x_register;
+    0
+}
 
+/// # Transfer Y to Accumulator
+/// Copies the contents of the Y register into the accumulator
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if A is zero
+/// - N - Negative Flag     - Set if bit 7 of A is set
+fn tya_fn(cpu: &mut Cpu) -> u8 {
+    cpu.a_register = cpu.y_register;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+    0
+}
 
