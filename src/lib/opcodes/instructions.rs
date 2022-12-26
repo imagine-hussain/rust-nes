@@ -2,14 +2,14 @@
 ///
 /// Documentation from:
 /// https://www.nesdev.org/obelisk-6502-guide/reference.html
-use crate::{cpu::CpuFlag, Cpu};
+use crate::{cpu::CpuFlag, Cpu, AddressingMode};
 
 /// # Add with carry
 ///
 /// This instruction adds the contents of a memory location to the accumulator together with the
 /// carry bit. If overflow occurs the carry bit is set, this enables multiple byte addition to be
 /// performed.
-/// # Status Register Flags
+/// ## Status Register Flags
 /// C    Carry Flag     - Set if overflow in bit 7
 /// Z    Zero Flag      - Set if A = 0
 /// V    Overflow Flag  - Set if sign bit is incorrect
@@ -73,4 +73,43 @@ fn sbc_fn(cpu: &mut Cpu) -> u8 {
     1 // Can require extra cycle
 }
 
+/// # Logical AND
+/// A logical AND is performed, bit by bit, on the accumulator contents using the contents of a
+/// byte of memory.
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if A = 0
+/// - N - Negative Flag     - Set if bit 7 set
+fn and_fn(cpu: &mut Cpu) -> u8 {
+    let fetched = cpu.fetch();
+
+    let res = cpu.a_register & fetched;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, res == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, (res & 0x80) != 0);
+
+    1
+}
+
+/// # Arithmetic Shift Left
+/// Shift bits of accumulator left by one position. Equivalent to acc << 1
+/// or, a multiplication by 2.
+/// ## Processor Status after use:
+/// - C - Carry Flag        - Multiplying result overflows 8bit register
+/// - Z - Zero Flag         - Set if A = 0
+/// - N - Negative Flag     - Set if bit 7 of result set
+fn asl_fn(cpu: &mut Cpu) -> u8 {
+    let raw_res: u16 = (cpu.fetch() as u16) << 0x01;
+    let result: u8 = (raw_res & 0xFF) as u8;
+
+    cpu.set_or_clear_flag(&CpuFlag::Carry, raw_res > u8::MAX as u16);
+    cpu.set_or_clear_flag(&CpuFlag::Zero, result == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, (result & 0x80) != 0);
+
+    // Store in either memory or accumulator
+    match cpu.addressing_mode {
+        AddressingMode::IMP => cpu.a_register = result,
+        _ => cpu.write(cpu.absolute_addr, result),
+    };
+
+    0
+}
 
