@@ -678,4 +678,31 @@ fn rts_fn(cpu: &mut Cpu) -> u8 {
     0
 }
 
+/// # Set Carry Flag
+/// Sets the carry flag to 1
+/// ## Processor Status after use:
+/// - C - Carry Flag        - Set to 1
+fn sec_fn(cpu: &mut Cpu) -> u8 {
+    cpu.set_flag(&CpuFlag::Carry);
+    0
+}
+
+/// # Set Decimal Flag
+/// Sets the decimal flag to 1
+/// ## Processor Status after use:
+/// - D - Decimal Flag      - Set to 1
+fn sed_fn(cpu: &mut Cpu) -> u8 {
+    cpu.set_flag(&CpuFlag::Decimal);
+    0
+}
+
+/// # Set Interrupt Disable
+/// Sets the interrupt disable flag to 1
+/// ## Processor Status after use:
+/// - I - Interrupt Flag    - Set to 1
+fn sei_fn(cpu: &mut Cpu) -> u8 {
+    cpu.set_flag(&CpuFlag::Interrupt);
+    0
+}
+
 
