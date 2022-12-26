@@ -705,4 +705,51 @@ fn sei_fn(cpu: &mut Cpu) -> u8 {
     0
 }
 
+/// # Store Accumulator
+/// Stores the contents of the accumulator into memory
+fn sta_fn(cpu: &mut Cpu) -> u8 {
+    cpu.write(cpu.absolute_addr, cpu.a_register);
+    0
+}
+
+
+/// # Store X Register
+/// Stores the contents of X into memory
+fn stx_fn(cpu: &mut Cpu) -> u8 {
+    cpu.write(cpu.absolute_addr, cpu.x_register);
+    0
+}
+
+/// # Store Y Register
+/// Stores the contents of Y into memory
+fn sty_fn(cpu: &mut Cpu) -> u8 {
+    cpu.write(cpu.absolute_addr, cpu.y_register);
+    0
+}
+
+/// # Transfer Accumulator to X
+/// Copies the contents of the accumulator into the X register
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if X is zero
+/// - N - Negative Flag     - Set if bit 7 of X is set
+fn tax_fn(cpu: &mut Cpu) -> u8 {
+    cpu.x_register = cpu.a_register;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
+    0
+}
+
+/// # Transfer Accumulator to Y
+/// Copies the contents of the accumulator into the Y register
+/// ## Processor Status after use:
+/// - Z - Zero Flag         - Set if Y is zero
+/// - N - Negative Flag     - Set if bit 7 of Y is set
+fn tay_fn(cpu: &mut Cpu) -> u8 {
+    cpu.y_register = cpu.a_register;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
+    0
+}
+
+
 
