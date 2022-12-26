@@ -64,7 +64,7 @@ pub enum OpCodeType {
 
 impl OpCodeType {
     // pub fn executable(&self) -> &'static dyn Fn(&mut Cpu) -> bool {
-    pub fn executable(&self) {
+    pub fn executable(&self) -> for<'r> fn(&'r mut Cpu) -> u8 {
         use crate::opcodes::instructions::*;
         use OpCodeType::*;
 
