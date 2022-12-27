@@ -77,6 +77,8 @@ impl Cpu {
             absolute_addr: 0,
             relative_addr: 0,
             addressing_mode: AddressingMode::IMP,
+            additional_cycle_addrmode: 0,
+            additional_cycle_operation: 0,
         }));
 
         new_cpu
@@ -118,7 +120,7 @@ impl Cpu {
         // fetch of the data, since the operation_fn also fetches.
         // PC may move out of sync.
         // Might want to do this in the actual addressing mode functions.
-        self.additional_cycle_addrmode = opcode.addressing_mode.fetch()(self);
+        self.additional_cycle_addrmode = self.addressing_mode.fetch()(self);
 
         // Do the operation
         self.additional_cycle_operation = opcode.code_type.executable()(self);
@@ -126,6 +128,7 @@ impl Cpu {
         // Calculate total cycles;
         // Refactor: Don't use members but actually return / pass the data around
         let additional_cycles = self.additional_cycle_operation & self.additional_cycle_addrmode;
+        self.clock.add_cycles(additional_cycles as u64);
 
         self.clock.tick();
     }

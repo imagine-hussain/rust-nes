@@ -13,3 +13,5 @@ path = "src/lib/lib.rs"
 name = "rust_nes"
 path = "src/main.rs"
 
+[dependencies]
+
