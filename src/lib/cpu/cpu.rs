@@ -168,13 +168,36 @@ impl Cpu {
         self.read(Cpu::STACK_BASE + self.stack_pointer as u16)
     }
 
-    pub fn reset() {
+    // Maybe these should be in their own file
+    pub fn reset(&mut self) {
+        // Go to reset vector
+        self.absolute_addr = 0xFFFC; // TODO: Make this a constant
+        let lo = self.read(self.absolute_addr) as u16;
+        let hi = self.read(self.absolute_addr + 1) as u16;
+        self.program_counter = (hi << 8) | lo; //  TODO: make a join function or macro
+
+        // Reset Internals to default
+        self.a_register = 0;
+        self.x_register = 0;
+        self.y_register = 0;
+        self.stack_pointer = 0xFD;
+        self.status_register = CpuFlag::Unused as u8;
+
+        self.additional_cycle_addrmode = 0;
+        self.additional_cycle_operation = 0;
+        self.addressing_mode = AddressingMode::IMP;
+        self.absolute_addr = 0;
+        self.fetched_data = 0;
+
+        // Take 8 cycles to reset but, don't consume a cylce in this func
+        // as this gets called between ticks.
+        self.clock.set_cycles(8);
+    }
+
+    pub fn interrupt_request(&mut self) {
         todo!()
     }
-    pub fn interrupt_request() {
-        todo!()
-    }
-    pub fn non_maskable_interrupt_request() {
+    pub fn non_maskable_interrupt_request(&mut self) {
         todo!()
     }
 
