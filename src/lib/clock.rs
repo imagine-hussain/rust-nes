@@ -2,7 +2,6 @@ pub struct Clock {
     total_ticks: u64,
     ticks_left: u64,
 }
-
 impl Clock {
     fn new() -> Self {
         Self {
@@ -25,6 +24,13 @@ impl Clock {
         self.ticks_left += cycles;
     }
 
+    pub fn cycles_left(&self) -> u64 {
+        self.ticks_left
+    }
+
+    pub fn is_ready(&self) -> bool {
+        self.ticks_left == 0
+    }
 }
 
 impl Default for Clock {
