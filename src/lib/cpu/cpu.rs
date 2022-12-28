@@ -60,6 +60,10 @@ pub struct Cpu {
 
 impl Cpu {
     pub const STACK_BASE: u16 = 0x0100;
+    pub const RESET_VECTOR: u16 = 0xFFFC;
+    pub const STACK_POINTER_RESET: u8 = 0xFD;
+    pub const IRQ_VECTOR: u16 = 0xFFFE;
+    pub const NMI_VECTOR: u16 = 0xFFFA;
 
     pub fn new() -> RcCell<Self> {
         let tmp_bus = Rc::new(RefCell::new(Bus::default()));
@@ -171,7 +175,7 @@ impl Cpu {
     // Maybe these should be in their own file
     pub fn reset(&mut self) {
         // Go to reset vector
-        self.absolute_addr = 0xFFFC; // TODO: Make this a constant
+        self.absolute_addr = Cpu::RESET_VECTOR;
         let lo = self.read(self.absolute_addr) as u16;
         let hi = self.read(self.absolute_addr + 1) as u16;
         self.program_counter = (hi << 8) | lo; //  TODO: make a join function or macro
@@ -180,7 +184,7 @@ impl Cpu {
         self.a_register = 0;
         self.x_register = 0;
         self.y_register = 0;
-        self.stack_pointer = 0xFD;
+        self.stack_pointer = Cpu::STACK_POINTER_RESET;
         self.status_register = CpuFlag::Unused as u8;
 
         self.additional_cycle_addrmode = 0;
@@ -194,11 +198,41 @@ impl Cpu {
         self.clock.set_cycles(8);
     }
 
+    /// Trigger an interrupt if the disable interrupt flag is not set.
+    /// They happen at any time but, we want to only execute these between
+    /// instructions
+    /// TODO: In future, an event queue can be very useful to handle this
+    /// trickiness
     pub fn interrupt_request(&mut self) {
-        todo!()
+        if self.get_flag(&CpuFlag::Interrupt) {
+            self.interrupt(Self::IRQ_VECTOR, 7);
+        }
     }
+
+    /// Non-Maskable Interrupt that cannot be disabled. Runs irrespective
+    /// of the status register.
     pub fn non_maskable_interrupt_request(&mut self) {
-        todo!()
+        self.interrupt(Self::NMI_VECTOR, 8)
+    }
+
+    fn interrupt(&mut self, pc_location: u16, cycles: u64) {
+        // Push PC to Stack
+        self.push_stack((self.program_counter & 0x00FF) as u8); // Lo
+        self.push_stack((self.program_counter & 0xFF00) as u8); // Hi
+
+        // Push Status Register to Stack
+        self.set_flag(&CpuFlag::Break);
+        self.set_flag(&CpuFlag::Interrupt);
+        self.set_flag(&CpuFlag::Unused);
+        self.push_stack(self.status_register);
+
+        // Go to Interrupt Vector
+        self.absolute_addr = pc_location;
+        let lo = self.read(self.absolute_addr) as u16;
+        let hi = self.read(self.absolute_addr + 1) as u16;
+        self.program_counter = (hi << 8) | lo;
+
+        self.clock.set_cycles(cycles);
     }
 
     #[inline]
