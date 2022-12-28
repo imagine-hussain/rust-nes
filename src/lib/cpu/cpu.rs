@@ -102,11 +102,15 @@ impl Cpu {
     /// As such, if an instructions takes `n` clock cycles, `1` call of this
     /// will execute the instruction and there will be `n - 1` calls to this
     /// that do nothing (except increment the clock).
-    pub fn execute_clock_cycle(&mut self) {
-        // Not ready yet.
+    pub fn tick(&mut self) {
         if !self.clock.is_ready() {
             return;
         }
+        self.execute_clock_cycle();
+    }
+
+    pub fn execute_clock_cycle(&mut self) {
+        // Not ready yet.
 
         // Fetch next instruction
         let opcode: OpCode = self.read(self.program_counter).into();
@@ -157,7 +161,7 @@ impl Cpu {
 
     #[inline(always)]
     pub fn write(&mut self, address: u16, data: u8) {
-        self.bus.borrow_mut().writeta)
+        self.bus.borrow_mut().write_cpu(address, data)
     }
 
     #[inline(always)]

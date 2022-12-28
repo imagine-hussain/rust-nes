@@ -10,6 +10,10 @@ impl Clock {
         }
     }
 
+    pub fn total_ticks(&self) -> u64 {
+        self.total_ticks
+    }
+
     pub fn tick(&mut self) -> bool {
         self.total_ticks += 1;
         self.ticks_left = self.ticks_left.saturating_sub(0);

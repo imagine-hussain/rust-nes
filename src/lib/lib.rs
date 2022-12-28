@@ -3,6 +3,7 @@ mod cpu;
 mod nes;
 mod opcodes;
 mod clock;
+mod cartridge;
 // TODO: Only export the public API
 pub mod ppu;
 
@@ -11,6 +12,7 @@ pub use cpu::Cpu;
 pub use nes::Nes;
 pub use clock::Clock;
 pub use ppu::Ppu;
+pub use cartridge::Cartridge;
 
 use std::{
     cell::RefCell,

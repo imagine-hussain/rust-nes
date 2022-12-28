@@ -1,11 +1,12 @@
 use std::ops::RangeInclusive;
 
-use crate::{Cpu, Ppu, RcCell, WeakCell};
+use crate::{Cartridge, Cpu, Ppu, RcCell, WeakCell};
 
 pub struct Bus {
     pub cpu: WeakCell<Cpu>,
     pub ppu: WeakCell<Ppu>,
     pub ram: [u8; 64 * 1024],
+    pub cartridge: Option<RcCell<Cartridge>>,
 }
 
 impl Bus {
@@ -24,6 +25,7 @@ impl Bus {
             cpu,
             ram: [0; 64 * 1024],
             ppu,
+            cartridge: None,
         }
     }
 
@@ -56,7 +58,8 @@ impl Bus {
             self.ram[(address as usize) & (Self::RAM_MIRROR_MASK as usize)] = data;
         } else if Self::PPU_RANGE.contains(&address) {
             self.unwrap_ppu()
-                .write(address & Self::PPU_MEMORY_MASK, data);
+                .borrow_mut()
+                .write_cpu(address & Self::PPU_MEMORY_MASK, data);
         } else {
             panic!("Unimplemented write to address: {:04X}", address);
         }
@@ -66,10 +69,20 @@ impl Bus {
         if Self::RAM_RANGE.contains(&address) {
             self.ram[(address as usize) & (Self::RAM_MIRROR_MASK as usize)]
         } else if Self::PPU_RANGE.contains(&address) {
-            self.unwrap_ppu().read(address & Self::PPU_MEMORY_MASK)
+            self.unwrap_ppu()
+                .borrow_mut()
+                .read_cpu(address & Self::PPU_MEMORY_MASK)
         } else {
             0
         }
+    }
+
+    pub fn tick(&mut self) {
+        todo!()
+    }
+
+    pub fn insert_cartridge(&mut self, cartridge: RcCell<Cartridge>) {
+        self.cartridge = Some(cartridge);
     }
 }
 
@@ -79,6 +92,7 @@ impl Default for Bus {
             cpu: WeakCell::new(),
             ppu: WeakCell::new(),
             ram: [0; 64 * 1024],
+            cartridge: None,
         }
     }
 }
