@@ -157,7 +157,7 @@ impl Cpu {
 
     #[inline(always)]
     pub fn write(&mut self, address: u16, data: u8) {
-        self.bus.borrow_mut().write_cpu(address, data)
+        self.bus.borrow_mut().writeta)
     }
 
     #[inline(always)]
