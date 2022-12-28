@@ -104,7 +104,7 @@ impl Cpu {
     /// that do nothing (except increment the clock).
     pub fn execute_clock_cycle(&mut self) {
         // Not ready yet.
-        if !self.clock.tick() {
+        if !self.clock.is_ready() {
             return;
         }
 
@@ -152,12 +152,12 @@ impl Cpu {
 
     #[inline(always)]
     pub fn read(&self, address: u16) -> u8 {
-        self.bus.borrow().read(address)
+        self.bus.borrow().read_cpu(address)
     }
 
     #[inline(always)]
     pub fn write(&mut self, address: u16, data: u8) {
-        self.bus.borrow_mut().write(address, data)
+        self.bus.borrow_mut().write_cpu(address, data)
     }
 
     #[inline(always)]

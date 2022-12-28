@@ -3,11 +3,14 @@ mod cpu;
 mod nes;
 mod opcodes;
 mod clock;
+// TODO: Only export the public API
+pub mod ppu;
 
 pub use bus::Bus;
 pub use cpu::Cpu;
 pub use nes::Nes;
 pub use clock::Clock;
+pub use ppu::Ppu;
 
 use std::{
     cell::RefCell,
