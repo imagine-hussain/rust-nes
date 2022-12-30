@@ -49,7 +49,7 @@ impl TryFrom<&[u8; 16]> for Header {
             return Err(HeaderParseError::NoNesConstant);
         }
 
-        Self {
+        Ok(Self {
             name: [bytestream[0], bytestream[1], bytestream[2], bytestream[3]],
             prg_rom_size: bytestream[4],
             prg_chr_size: bytestream[5],
@@ -58,8 +58,19 @@ impl TryFrom<&[u8; 16]> for Header {
             prg_ram_size: bytestream[8],
             tv_system_1: bytestream[9],
             tv_system_2: bytestream[10],
-        };
+        })
+    }
+}
 
+impl TryFrom<&[u8]> for Header {
+    type Error = HeaderParseError;
+
+    fn try_from(bytestream: &[u8]) -> Result<Self, Self::Error> {
+        if bytestream.len() != 16 {
+            return Err(HeaderParseError::InvalidStreamLength);
+        }
+        let header_bytestream: &[u8; 16] = bytestream.try_into().expect("Checked Length");
+        Self::try_from(header_bytestream)
     }
 }
 
@@ -67,16 +78,7 @@ impl TryFrom<&str> for Header {
     type Error = HeaderParseError;
 
     fn try_from(s: &str) -> Result<Self, Self::Error> {
-        if s.len() < 16 {
-            return Err(HeaderParseError::InvalidStreamLength);
-        }
-
-        // let mut header_bytestream: [u8; 16] = s.as_bytes().try_into().unwrap();
-        let header_bytestream: &[u8; 16] = &s.as_bytes()[0..16]
-            .try_into()
-            .expect("Checked stream length > 16");
-
-        Header::try_from(header_bytestream)
+        Header::try_from(s.as_bytes())
     }
 }
 
@@ -87,4 +89,3 @@ impl TryFrom<String> for Header {
         Header::try_from(value.as_str())
     }
 }
-
