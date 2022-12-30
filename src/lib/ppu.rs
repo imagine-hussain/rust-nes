@@ -4,7 +4,11 @@ use crate::{Cartridge, RcCell, Reset};
 ///
 /// <https://www.nesdev.org/wiki/PPU>
 pub struct Ppu {
-    memory: [u8; 10 * 1024],
+    // Physical parts of the NES
+    // Has got 10Kb of memory. Split up into into the following address spaces.
+    name_table: [u8; 2 * 1024], // 1kb NameTable * 2
+    memory: [u8; 10 * 1024],     // TODO: Stand-in for better management
+    palette: [u8; 32],          // 32 bytes of Palette (8 blocks of 4 bytes)
     pub cartridge: Option<RcCell<Cartridge>>,
     // pattern: [u8; 8 * 1024],
     // name_table: [u8; 2 * 1024],
@@ -14,8 +18,10 @@ pub struct Ppu {
 impl Ppu {
     pub fn new() -> Self {
         Self {
-            memory: [0; 10 * 1024],
             cartridge: None,
+            name_table: todo!(),
+            palette: todo!(),
+            memory: todo!(),
         }
     }
 
