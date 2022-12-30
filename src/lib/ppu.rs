@@ -1,4 +1,4 @@
-use crate::{Cartridge, RcCell};
+use crate::{Cartridge, RcCell, Reset};
 
 /// # Emulation Structure for the Picture Processing Unit (PPU)
 ///
@@ -44,3 +44,11 @@ impl Default for Ppu {
         Ppu::new()
     }
 }
+
+impl Reset for Ppu {
+    fn reset(&mut self) {
+        // TODO: Implement a reset
+        // self.memory = [0; 10 * 1024];
+    }
+}
+

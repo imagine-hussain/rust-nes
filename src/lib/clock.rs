@@ -1,3 +1,5 @@
+use crate::Reset;
+
 pub struct Clock {
     total_ticks: u64,
     ticks_left: u64,
@@ -42,3 +44,11 @@ impl Default for Clock {
         Self::new()
     }
 }
+
+impl Reset for Clock {
+    fn reset(&mut self) {
+        self.total_ticks = 0;
+        self.ticks_left = 0;
+    }
+}
+

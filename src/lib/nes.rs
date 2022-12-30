@@ -1,6 +1,6 @@
 use std::{rc::Rc, cell::RefCell};
 
-use crate::{Bus, Clock, Cpu, Ppu, RcCell, Cartridge};
+use crate::{Bus, Clock, Cpu, Ppu, RcCell, Cartridge, Reset};
 
 pub struct Nes {
     pub cpu: RcCell<Cpu>,
@@ -47,3 +47,13 @@ impl Default for Nes {
         Self::new(cpu, bus, ppu, clock)
     }
 }
+
+impl Reset for Nes {
+    fn reset(&mut self) {
+        self.cpu.borrow_mut().reset();
+        self.bus.borrow_mut().reset();
+        self.ppu.borrow_mut().reset();
+        self.clock.reset();
+    }
+}
+

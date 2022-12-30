@@ -4,7 +4,7 @@ use crate::{
         flags::{clear_flag, set_flag, CpuFlag},
         AddressingMode,
     },
-    Bus, RcCell, opcodes::OpCode,
+    Bus, RcCell, opcodes::OpCode, Reset,
 };
 use std::{cell::RefCell, rc::Rc};
 
@@ -176,32 +176,6 @@ impl Cpu {
         self.read(Cpu::STACK_BASE + self.stack_pointer as u16)
     }
 
-    // Maybe these should be in their own file
-    pub fn reset(&mut self) {
-        // Go to reset vector
-        self.absolute_addr = Cpu::RESET_VECTOR;
-        let lo = self.read(self.absolute_addr) as u16;
-        let hi = self.read(self.absolute_addr + 1) as u16;
-        self.program_counter = (hi << 8) | lo; //  TODO: make a join function or macro
-
-        // Reset Internals to default
-        self.a_register = 0;
-        self.x_register = 0;
-        self.y_register = 0;
-        self.stack_pointer = Cpu::STACK_POINTER_RESET;
-        self.status_register = CpuFlag::Unused as u8;
-
-        self.additional_cycle_addrmode = 0;
-        self.additional_cycle_operation = 0;
-        self.addressing_mode = AddressingMode::IMP;
-        self.absolute_addr = 0;
-        self.fetched_data = 0;
-
-        // Take 8 cycles to reset but, don't consume a cylce in this func
-        // as this gets called between ticks.
-        self.clock.set_cycles(8);
-    }
-
     /// Trigger an interrupt if the disable interrupt flag is not set.
     /// They happen at any time but, we want to only execute these between
     /// instructions
@@ -260,5 +234,35 @@ impl Cpu {
         } else {
             self.clear_flag(flag)
         }
+    }
+}
+
+impl Reset for Cpu {
+    // Maybe these should be in their own file
+    fn reset(&mut self) {
+        // Go to reset vector
+        self.absolute_addr = Cpu::RESET_VECTOR;
+        let lo = self.read(self.absolute_addr) as u16;
+        let hi = self.read(self.absolute_addr + 1) as u16;
+        self.program_counter = (hi << 8) | lo; //  TODO: make a join function or macro
+
+        // Reset Internals to default
+        self.a_register = 0;
+        self.x_register = 0;
+        self.y_register = 0;
+        self.stack_pointer = Cpu::STACK_POINTER_RESET;
+        self.status_register = CpuFlag::Unused as u8;
+
+        self.additional_cycle_addrmode = 0;
+        self.additional_cycle_operation = 0;
+        self.addressing_mode = AddressingMode::IMP;
+        self.absolute_addr = 0;
+        self.fetched_data = 0;
+
+        // Take 8 cycles to reset but, don't consume a cylce in this func
+        // as this gets called between ticks.
+        // Maybe use clock.reset differently?
+        self.clock.reset();
+        self.clock.set_cycles(8);
     }
 }

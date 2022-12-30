@@ -21,3 +21,7 @@ use std::{
 
 pub type RcCell<T> = Rc<RefCell<T>>;
 pub type WeakCell<T> = Weak<RefCell<T>>;
+
+pub trait Reset {
+    fn reset(&mut self);
+}
