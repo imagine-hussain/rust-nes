@@ -8,11 +8,28 @@ pub struct Header {
     pub name: [u8; 4],
     pub prg_rom_size: u8,
     pub prg_chr_size: u8,
-    pub mapper_1: u8,
-    pub mapper_2: u8,
+    pub flag_6: u8,
+    pub flag_7: u8,
     pub prg_ram_size: u8,
     pub tv_system_1: u8,
     pub tv_system_2: u8,
+}
+
+impl Header {
+    /// Returns true if the header says the Cartridge contains
+    /// trainer data.
+    /// This information exists in the `3` byte of the `flag_6` field
+    /// in the header.
+    pub fn has_trainer(&self) -> bool {
+        self.flag_6 & 0b0000_0100 != 0
+    }
+
+    /// Returns the mapper number by parsing flag 6 and 7
+    pub fn mapper_id(&self) -> u8 {
+        // The lower nybble of the mapper number is in flag 6: bytes [4-7]
+        // The upper nybble of the mapper number is in flag 7: bytes [4-7]
+        (self.flag_7 & 0b1111_0000) | (self.flag_6 >> 4)
+    }
 }
 
 pub enum HeaderParseError {
@@ -53,8 +70,8 @@ impl TryFrom<&[u8; 16]> for Header {
             name: [bytestream[0], bytestream[1], bytestream[2], bytestream[3]],
             prg_rom_size: bytestream[4],
             prg_chr_size: bytestream[5],
-            mapper_1: bytestream[6],
-            mapper_2: bytestream[7],
+            flag_6: bytestream[6],
+            flag_7: bytestream[7],
             prg_ram_size: bytestream[8],
             tv_system_1: bytestream[9],
             tv_system_2: bytestream[10],

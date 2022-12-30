@@ -34,7 +34,7 @@ impl Cartridge {
 pub enum CartridgeParseError {
     InvalidHeader(HeaderParseError),
     ProgramRomCutsOff,
-    CharacterRomCutsOff
+    CharacterRomCutsOff,
 }
 
 impl TryFrom<&[u8]> for Cartridge {
@@ -57,11 +57,14 @@ impl TryFrom<&[u8]> for Cartridge {
             Err(e) => return Err(InvalidHeader(e)),
         };
 
-
-        // Assume no trainer for now; TODO: Add support for trainer
+        // TODO: Add support for doing something with the trainer
+        let has_trainer = header.has_trainer();
 
         // Program Memory
-        let bytestream = &bytestream[16..];
+        let bytestream = match has_trainer {
+            true => &bytestream[16 + 512..],
+            false => &bytestream[16..],
+        };
         let prg_size = header.prg_rom_size as usize * PRG_CHUNK_SIZE;
         if bytestream.len() < prg_size {
             return Err(ProgramRomCutsOff);
@@ -77,14 +80,17 @@ impl TryFrom<&[u8]> for Cartridge {
         let virtual_character_memory = bytestream[..chr_size].to_vec();
 
         // TODO: Program banks, chracter banks,
+
+
         // TODO: Mapper
+        let mapper_id = header.mapper_id();
 
         // TODO:
         Ok(Self {
             header,
             virtual_program_memory,
             virtual_character_memory,
-            mapper_id: 0,
+            mapper_id,
             program_banks_count: 0,
             character_banks_count: 0,
         })
