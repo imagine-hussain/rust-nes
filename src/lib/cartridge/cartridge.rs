@@ -13,13 +13,12 @@ const CHR_CHUNK_SIZE: usize = 0x2000;
 /// Created from a `iNes` file, this struct contains all the information
 /// needed to emulate the cartridge including metadata, game rom and, mappers.
 pub struct Cartridge {
-    // TODO: Fields
+    pub header: Header,
     pub virtual_program_memory: Vec<u8>,
     pub virtual_character_memory: Vec<u8>,
     pub mapper_id: u8,
     pub program_banks_count: u8,
     pub character_banks_count: u8,
-    pub header: Header,
 }
 
 impl Cartridge {
@@ -80,7 +79,6 @@ impl TryFrom<&[u8]> for Cartridge {
         let virtual_character_memory = bytestream[..chr_size].to_vec();
 
         // TODO: Program banks, chracter banks,
-
 
         // TODO: Mapper
         let mapper_id = header.mapper_id();
