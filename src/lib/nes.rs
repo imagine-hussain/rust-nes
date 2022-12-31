@@ -22,7 +22,8 @@ impl Nes {
     pub fn tick(&mut self) {
         self.bus.borrow_mut().tick();
         self.ppu.borrow_mut().tick();
-        // Cpu is 3 times slower than Bius
+
+        // Cpu is 3 times slower than PPU
         if self.clock.total_ticks() % 3 == 0 {
             self.cpu.borrow_mut().tick();
         }

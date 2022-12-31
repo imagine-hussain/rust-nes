@@ -4,6 +4,7 @@
 /// [Wiki Source](https://www.nesdev.org/wiki/INES#iNES_file_format>)
 ///
 ///
+#[derive(Debug, Copy, Clone)]
 pub struct Header {
     pub name: [u8; 4],
     pub prg_rom_size: u8,

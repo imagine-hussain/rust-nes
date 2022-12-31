@@ -4,17 +4,16 @@ mod clock;
 mod cpu;
 mod nes;
 mod opcodes;
-// TODO: Only export the public API
-mod mapper;
-pub mod ppu;
+mod mappers;
+pub mod ppu; // Fix exports for this
 
 pub use bus::Bus;
 pub use cartridge::Cartridge;
 pub use clock::Clock;
 pub use cpu::Cpu;
-pub use mapper::Mapper;
 pub use nes::Nes;
 pub use ppu::Ppu;
+pub use mappers::Mapper;
 
 use std::{
     cell::RefCell,

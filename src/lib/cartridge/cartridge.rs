@@ -1,5 +1,10 @@
 use std::vec::Vec;
 
+use crate::{
+    mappers::{select_mapper, Mapper000},
+    Mapper,
+};
+
 use super::{header::HeaderParseError, Header};
 
 /// Program is in 16Kb Chunks
@@ -19,13 +24,24 @@ pub struct Cartridge {
     pub mapper_id: u8,
     pub program_banks_count: u8,
     pub character_banks_count: u8,
+    pub mapper: Mapper000,
 }
 
 impl Cartridge {
     pub fn ppu_read() {}
     pub fn ppu_write() {}
-    pub fn cpu_read() {}
-    pub fn cpu_write() {}
+
+    pub fn cpu_read(&mut self, address: u16) -> u8 {
+        let mut new_address: u16 = 0;
+        if self.mapper.map_cpu_read(address, &mut new_address) {
+            self.virtual_program_memory[new_address as usize]
+        } else {
+            0
+        }
+    }
+
+    pub fn cpu_write() {
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -56,7 +72,7 @@ impl TryFrom<&[u8]> for Cartridge {
             Err(e) => return Err(InvalidHeader(e)),
         };
 
-        // TODO: Add support for doing something with the trainer
+        // TODO: Do something other than just ignore the training data
         let has_trainer = header.has_trainer();
 
         // Program Memory
@@ -64,33 +80,43 @@ impl TryFrom<&[u8]> for Cartridge {
             true => &bytestream[16 + 512..],
             false => &bytestream[16..],
         };
-        let prg_size = header.prg_rom_size as usize * PRG_CHUNK_SIZE;
-        if bytestream.len() < prg_size {
-            return Err(ProgramRomCutsOff);
-        }
-        let virtual_program_memory = bytestream[..prg_size].to_vec();
+        let program_banks_count = header.prg_rom_size;
+        let prg_size = program_banks_count as usize * PRG_CHUNK_SIZE;
+        let virtual_program_memory = match bytestream.len() < prg_size {
+            true => return Err(ProgramRomCutsOff),
+            false => bytestream[..prg_size].to_vec(),
+        };
 
         // Character Memory
         let bytestream = &bytestream[prg_size..];
-        let chr_size = header.prg_chr_size as usize * CHR_CHUNK_SIZE;
-        if bytestream.len() < 8192 {
-            return Err(CharacterRomCutsOff);
-        }
-        let virtual_character_memory = bytestream[..chr_size].to_vec();
+        let character_banks_count = header.prg_rom_size;
+        let chr_size = program_banks_count as usize * CHR_CHUNK_SIZE;
+        let virtual_character_memory = match bytestream.len() < chr_size {
+            true => return Err(CharacterRomCutsOff),
+            false => bytestream[..chr_size].to_vec(),
+        };
 
-        // TODO: Program banks, chracter banks,
-
-        // TODO: Mapper
         let mapper_id = header.mapper_id();
+        // Currently only support Mapper 000
+        let mapper = select_mapper(mapper_id, &header);
 
-        // TODO:
+        // To Dos
+        // TODO: Program banks, chracter banks,
+        // TODO: Deal with the 3 diff file formats
+        //      - Archaic iNES
+        //      - iNES 0.7
+        //      - iNES
+        // TODO: Read rest of Flag6 and Flag7
+        //
+
         Ok(Self {
             header,
             virtual_program_memory,
             virtual_character_memory,
             mapper_id,
-            program_banks_count: 0,
-            character_banks_count: 0,
+            program_banks_count,
+            character_banks_count,
+            mapper,
         })
     }
 }

@@ -10,18 +10,26 @@ pub struct Ppu {
     memory: [u8; 10 * 1024],     // TODO: Stand-in for better management
     palette: [u8; 32],          // 32 bytes of Palette (8 blocks of 4 bytes)
     pub cartridge: Option<RcCell<Cartridge>>,
+    scanline: usize,
+    cycle: usize,
     // pattern: [u8; 8 * 1024],
     // name_table: [u8; 2 * 1024],
     // palette: [u8; 32],
 }
 
 impl Ppu {
+
+    pub const SCREEN_WIDTH: usize = 340;
+    pub const SCREEN_HEIGHT: usize = 240;
+
     pub fn new() -> Self {
         Self {
             cartridge: None,
-            name_table: todo!(),
-            palette: todo!(),
-            memory: todo!(),
+            name_table: [0; 2 * 1024],
+            palette: [0; 32],
+            memory: [0; 10 * 1024],
+            scanline: 0,
+            cycle: 0,
         }
     }
 
@@ -41,7 +49,17 @@ impl Ppu {
     }
 
     pub fn tick(&mut self) {
+        // TODO: Render to some screen
 
+        // Advance to next pixel and wrap column and scanline around
+        self.cycle += 1;
+        if self.cycle > Self::SCREEN_WIDTH {
+            self.cycle = 0;
+            self.scanline += 1;
+            if self.scanline > Self::SCREEN_HEIGHT {
+                self.scanline = 0;
+            }
+        }
     }
 }
 
