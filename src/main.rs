@@ -1,7 +1,6 @@
-use lib::Nes;
-
+use sdl2;
 
 fn main() {
-    let _nes = Nes::default();
+
 }
 

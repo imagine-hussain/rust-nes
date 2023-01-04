@@ -72,7 +72,7 @@ impl TryFrom<&[u8]> for Cartridge {
             Err(e) => return Err(InvalidHeader(e)),
         };
 
-        // TODO: Do something other than just ignore the training data
+        // TODO: Do something other than just ignore the training data?
         let has_trainer = header.has_trainer();
 
         // Program Memory

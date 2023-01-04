@@ -14,5 +14,6 @@ name = "rust_nes"
 path = "src/main.rs"
 
 [dependencies]
+imgui-rs = "1.47.0"
 sdl2 = "0.35.2"
 
