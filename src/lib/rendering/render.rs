@@ -1,9 +1,9 @@
-use sdl2::event::Event;
+use sdl2::event::Event as SdlEvent;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::{Sdl, VideoSubsystem};
 
-use super::RenderError;
+use super::{Event, RenderError};
 // use std::time::Duration;
 
 pub struct Render {
@@ -71,32 +71,35 @@ impl Render {
     pub fn handle_events(&mut self) -> Result<bool, RenderError> {
         let mut update_needed = false;
         while let Some(event) = self.event_pump.poll_event() {
+            let event: Event = event.into();
             update_needed = self.handle_event(event)? || update_needed;
         }
         Ok(false)
     }
 
     fn handle_event(&mut self, event: Event) -> Result<bool, RenderError> {
-        match event {
-            Event::Quit { .. } => Err(RenderError::Quit),
-            Event::MouseButtonDown { .. }
-            | Event::MouseButtonUp { .. }
-            | Event::MouseWheel { .. }
-            | Event::MouseMotion { .. } => self.handle_mouse_event(event),
-            _ => Ok(true),
-        }
+        // match event {
+        //     SdlEvent::Quit { .. } => Err(RenderError::Quit),
+        //     SdlEvent::MouseButtonDown { .. }
+        //     | SdlEvent::MouseButtonUp { .. }
+        //     | SdlEvent::MouseWheel { .. }
+        //     | SdlEvent::MouseMotion { .. } => self.handle_mouse_event(event),
+        //     _ => Ok(true),
+        // }
+        Ok(true)
     }
 
     // TODO Proper structs and handling for these
     fn handle_mouse_event(&mut self, mouse_event: Event) -> Result<bool, RenderError> {
-        match mouse_event {
-            Event::MouseButtonDown { x, y, .. } => {
-                println!("Mouse button down at ({}, {})", x, y);
-                self.canvas.set_draw_color(Color::RGB(0, 255, 0));
-                self.canvas.fill_rect(Rect::new(x, y, 10, 10))?;
-                Ok(true)
-            }
-            _ => Ok(false),
-        }
+        // match mouse_event {
+        //     SdlEvent::MouseButtonDown { x, y, .. } => {
+        //         println!("Mouse button down at ({}, {})", x, y);
+        //         self.canvas.set_draw_color(Color::RGB(0, 255, 0));
+        //         self.canvas.fill_rect(Rect::new(x, y, 10, 10))?;
+        //         Ok(true)
+        //     }
+        //     _ => Ok(false),
+        // }
+        Ok(true)
     }
 }
