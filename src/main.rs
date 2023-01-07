@@ -1,13 +1,6 @@
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
-use sdl2::rect::{Point, Rect};
-use std::future::Future;
-use std::pin::Pin;
-use std::task::{Poll, Context, Waker};
 use std::time::Duration;
 
-use lib::render::Render;
+use lib::rendering::Render;
 
 pub fn main() {
 

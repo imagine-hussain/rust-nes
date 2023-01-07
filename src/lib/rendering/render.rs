@@ -1,7 +1,9 @@
 use sdl2::event::Event;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
-use sdl2::{video::WindowBuildError, IntegerOrSdlError, Sdl, VideoSubsystem};
+use sdl2::{Sdl, VideoSubsystem};
+
+use super::RenderError;
 // use std::time::Duration;
 
 pub struct Render {
@@ -94,35 +96,7 @@ impl Render {
                 self.canvas.fill_rect(Rect::new(x, y, 10, 10))?;
                 Ok(true)
             }
-            _ => Ok(false)
+            _ => Ok(false),
         }
-    }
-}
-
-/// Error type for the render module.
-#[derive(Debug)]
-pub enum RenderError {
-    SdlError(String),
-    WindowError(WindowBuildError),
-    IntegerOrSdlError(IntegerOrSdlError),
-    // InternalError(String),
-    Quit,
-}
-
-impl From<String> for RenderError {
-    fn from(err: String) -> Self {
-        Self::SdlError(err)
-    }
-}
-
-impl From<WindowBuildError> for RenderError {
-    fn from(err: WindowBuildError) -> Self {
-        Self::WindowError(err)
-    }
-}
-
-impl From<IntegerOrSdlError> for RenderError {
-    fn from(err: IntegerOrSdlError) -> Self {
-        Self::IntegerOrSdlError(err)
     }
 }
