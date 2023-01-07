@@ -4,6 +4,7 @@ use sdl2::event::Event as SdlEvent;
 use sdl2::event::WindowEvent as SdlWindowEvent;
 
 type TimeStamp = u32;
+
 pub enum Event {
     Quit(TimeStamp),
     AppTerminating(TimeStamp),
@@ -344,23 +345,27 @@ impl From<SdlEvent> for Event {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DisplayEvent {
     pub timestamp: TimeStamp,
     pub display_index: i32,
     pub display_event: sdl2::event::DisplayEvent,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct WindowEvent {
     pub timestamp: TimeStamp,
     pub window_id: u32,
     pub win_event: SdlWindowEvent,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PressDirection {
     Up,
     Down,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct KeyEvent {
     pub timestamp: TimeStamp,
     pub window_id: u32,
@@ -371,6 +376,7 @@ pub struct KeyEvent {
     pub direction: PressDirection,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TextEvent {
     pub timestamp: TimeStamp,
     pub window_id: u32,
@@ -378,11 +384,13 @@ pub struct TextEvent {
     pub offset: Option<SizedOffset>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SizedOffset {
     pub start: i32,
     pub length: i32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MouseMotionEvent {
     pub timestamp: TimeStamp,
     pub window_id: u32,
@@ -394,6 +402,7 @@ pub struct MouseMotionEvent {
     pub yrel: i32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MouseClickEvent {
     pub timestamp: TimeStamp,
     pub window_id: u32,
@@ -405,6 +414,7 @@ pub struct MouseClickEvent {
     pub direction: PressDirection,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MouseWheelEvent {
     pub timestamp: TimeStamp,
     pub window_id: u32,
@@ -414,23 +424,27 @@ pub struct MouseWheelEvent {
     pub direction: sdl2::mouse::MouseWheelDirection,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DropFileEvent {
     pub timestamp: TimeStamp,
     pub window_id: u32,
     pub filename: String,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DropStage {
     Begin,
     Complete,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DropEvent {
     pub timestamp: TimeStamp,
     pub window_id: u32,
     pub stage: DropStage,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct JoyButtonEvent {
     pub timestamp: TimeStamp,
     pub which: u32,
@@ -438,6 +452,7 @@ pub struct JoyButtonEvent {
     pub direction: PressDirection,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct JoyAxisMotionEvent {
     pub timestamp: TimeStamp,
     pub which: u32,
@@ -445,6 +460,7 @@ pub struct JoyAxisMotionEvent {
     pub value: i16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct JoyBallMotionEvent {
     pub timestamp: TimeStamp,
     pub which: u32,
@@ -453,6 +469,7 @@ pub struct JoyBallMotionEvent {
     pub yrel: i16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct JoyHatMotionEvent {
     pub timestamp: TimeStamp,
     pub which: u32,
@@ -460,12 +477,14 @@ pub struct JoyHatMotionEvent {
     pub state: sdl2::joystick::HatState,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AudioDeviceEvent {
     pub timestamp: TimeStamp,
     pub which: u32,
     pub iscapture: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UserEvent {
     pub timestamp: TimeStamp,
     pub window_id: u32,
@@ -475,6 +494,7 @@ pub struct UserEvent {
     pub data2: *mut c_void,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct UnknownEvent {
     pub timestamp: Option<TimeStamp>,
     pub type_: Option<u32>,

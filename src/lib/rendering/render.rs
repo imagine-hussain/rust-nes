@@ -78,28 +78,17 @@ impl Render {
     }
 
     fn handle_event(&mut self, event: Event) -> Result<bool, RenderError> {
-        // match event {
-        //     SdlEvent::Quit { .. } => Err(RenderError::Quit),
-        //     SdlEvent::MouseButtonDown { .. }
-        //     | SdlEvent::MouseButtonUp { .. }
-        //     | SdlEvent::MouseWheel { .. }
-        //     | SdlEvent::MouseMotion { .. } => self.handle_mouse_event(event),
-        //     _ => Ok(true),
-        // }
+        match event {
+            Event::Quit(timestamp) => {
+                println!("Quit event at {}", timestamp);
+                return Err(RenderError::Quit);
+            }
+            Event::Key(key_event) => {
+                println!("Key event: {:?}", key_event);
+            }
+            _ => {}
+        }
         Ok(true)
     }
 
-    // TODO Proper structs and handling for these
-    fn handle_mouse_event(&mut self, mouse_event: Event) -> Result<bool, RenderError> {
-        // match mouse_event {
-        //     SdlEvent::MouseButtonDown { x, y, .. } => {
-        //         println!("Mouse button down at ({}, {})", x, y);
-        //         self.canvas.set_draw_color(Color::RGB(0, 255, 0));
-        //         self.canvas.fill_rect(Rect::new(x, y, 10, 10))?;
-        //         Ok(true)
-        //     }
-        //     _ => Ok(false),
-        // }
-        Ok(true)
-    }
 }
