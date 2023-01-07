@@ -6,7 +6,7 @@ mod nes;
 mod opcodes;
 mod mappers;
 pub mod ppu;
-pub mod render; // Fix exports for this
+pub mod rendering; // Fix exports for this
 
 pub use bus::Bus;
 pub use cartridge::Cartridge;

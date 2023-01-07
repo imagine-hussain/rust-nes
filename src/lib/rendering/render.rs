@@ -1,6 +1,6 @@
 use sdl2::event::Event;
 use sdl2::pixels::Color;
-use sdl2::rect::{Point, Rect};
+use sdl2::rect::Rect;
 use sdl2::{video::WindowBuildError, IntegerOrSdlError, Sdl, VideoSubsystem};
 // use std::time::Duration;
 
@@ -39,6 +39,7 @@ impl Render {
     }
 }
 
+// TODO: implement own back-buffer
 impl Render {
     pub fn tick(&mut self) -> Result<(), RenderError> {
         self.times_polled += 1;
@@ -58,12 +59,10 @@ impl Render {
         // self.canvas.clear();
         // let rec = Rect::new(50, 50, 100, 100);
 
-        let rerender = self.handle_events()?;
-        // if self.handle_events()? {
-        //     println!("Re-rendering");
-        //     self.canvas.present();
-        // };
-        // self.canvas.present();
+        if self.handle_events()? {
+            println!("Re-rendering");
+            self.canvas.present();
+        };
         Ok(())
     }
 
