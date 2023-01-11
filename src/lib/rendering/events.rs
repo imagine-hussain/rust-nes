@@ -3,7 +3,7 @@ use std::ffi::c_void;
 use sdl2::event::Event as SdlEvent;
 use sdl2::event::WindowEvent as SdlWindowEvent;
 
-type TimeStamp = u32;
+pub type TimeStamp = u32;
 
 pub enum Event {
     Quit(TimeStamp),
