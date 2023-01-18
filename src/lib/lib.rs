@@ -9,7 +9,6 @@ mod mappers;
 pub mod egui; // fix privacy
 
 pub mod ppu;
-pub mod rendering; // Fix exports for this
 
 pub use bus::Bus;
 pub use cartridge::Cartridge;
