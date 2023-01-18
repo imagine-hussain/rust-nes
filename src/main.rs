@@ -1,12 +1,9 @@
-use eframe::run_native;
-
 use lib::{egui::Gui, Nes};
 
 pub fn main() {
-    let nes: Nes = Nes::default();
-    let app = Gui::new(nes);
+    let app = Gui::new(Nes::default());
 
-    run_native(
+    eframe::run_native(
         "Nes-Rs",
         Gui::default_win_options(),
         Box::new(|_cc| Box::new(app)),

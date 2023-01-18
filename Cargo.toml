@@ -16,5 +16,6 @@ path = "src/main.rs"
 [dependencies]
 eframe = "0.20.1"
 egui = "0.20.1"
+epaint = "0.20.0"
 fstrings = "0.2.3"
 
