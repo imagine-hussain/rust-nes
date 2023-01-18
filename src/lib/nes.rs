@@ -1,4 +1,4 @@
-use std::{rc::Rc, cell::RefCell};
+use std::{rc::Rc, cell::{RefCell, Ref, RefMut}};
 
 use crate::{Bus, Clock, Cpu, Ppu, RcCell, Cartridge, Reset};
 
@@ -34,6 +34,18 @@ impl Nes {
     pub fn insert_cartidge(&mut self, cartridge: RcCell<Cartridge>) {
         self.bus.borrow_mut().insert_cartridge(cartridge.clone());
         self.ppu.borrow_mut().insert_cartidge(cartridge);
+    }
+
+    pub fn cpu(&self) -> RcCell<Cpu> {
+        self.cpu.clone()
+    }
+
+    pub fn cpu_ref(&self) -> Ref<Cpu> {
+        self.cpu.borrow()
+    }
+
+    pub fn cpu_mut(&self) -> RefMut<Cpu> {
+        self.cpu.borrow_mut()
     }
 
 }

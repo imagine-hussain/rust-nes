@@ -14,5 +14,8 @@ name = "rust_nes"
 path = "src/main.rs"
 
 [dependencies]
+eframe = "0.20.1"
+egui = "0.20.1"
+fstrings = "0.2.3"
 sdl2 = "0.35.2"
 

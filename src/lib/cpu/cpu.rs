@@ -167,7 +167,7 @@ impl Cpu {
     #[inline(always)]
     pub fn push_stack(&mut self, data: u8) {
         self.write(Cpu::STACK_BASE + self.stack_pointer as u16, data);
-        self.stack_pointer -= 1;
+        self.stack_pointer = self.stack_pointer.wrapping_sub(1);
     }
 
     #[inline(always)]
@@ -235,6 +235,28 @@ impl Cpu {
             self.clear_flag(flag)
         }
     }
+
+    pub fn get_registers(&self) -> Registers {
+        Registers {
+            a: self.a_register,
+            x: self.x_register,
+            y: self.y_register,
+            status: self.status_register,
+            stack_pointer: self.stack_pointer,
+            program_counter: self.program_counter,
+        }
+    }
+
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Registers {
+    pub a: u8,
+    pub x: u8,
+    pub y: u8,
+    pub status: u8,
+    pub stack_pointer: u8,
+    pub program_counter: u16,
 }
 
 impl Reset for Cpu {
