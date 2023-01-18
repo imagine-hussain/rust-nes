@@ -1,3 +1,4 @@
+use std::time::Duration;
 use std::time::Instant;
 
 use eframe::App;
@@ -17,14 +18,21 @@ pub struct Gui {
     pub nes: Nes,
     clock: Clock,
     startup_time: Instant,
+    last_frame: Instant,
+    framerate: u32,
 }
 
 impl Gui {
+
+    const FRAMERATE_UPDATE_INTERVAL: u64 = 10;
+
     pub fn new(nes: Nes) -> Self {
         Self {
             nes,
             clock: Clock::default(),
             startup_time: Instant::now(),
+            last_frame: Instant::now(),
+            framerate: 0,
         }
     }
 
@@ -70,29 +78,54 @@ impl Gui {
         }
     }
 
+    fn update_delta_time(&mut self) {
+        self.last_frame = Instant::now();
+    }
+
+    fn update_framerate(&mut self) -> u32 {
+        let delta_time = self.last_frame.elapsed().as_millis();
+        self.framerate = match delta_time == 0 {
+            true => 69,
+            false => ((Self::FRAMERATE_UPDATE_INTERVAL as u128 * 1_000) / delta_time) as u32
+        };
+        self.framerate
+    }
 }
 
 impl App for Gui {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         self.clock.tick();
         self.simulate_nes_frame();
-        let frame_number = self.clock.total_ticks();
-        let frame_str = fstrings::f!("Frame: {frame_number}");
+
+        let tick_number = self.clock.total_ticks();
+        let frame_str = fstrings::f!("Frame: {tick_number}");
 
         let elapsed_time = self.startup_time.elapsed().as_secs_f32();
-        let elapsed_str = fstrings::f!("Elapsed Time: {elapsed_time}s");
+        let elapsed_str = fstrings::f!("Elapsed Time: {elapsed_time:.4}s");
+
+        if tick_number % Self::FRAMERATE_UPDATE_INTERVAL == 0 {
+            self.update_framerate();
+            self.update_delta_time();
+        }
+
+        let framerate = self.framerate;
+        let framerate_str = f!("Framerate: {framerate}");
 
         SidePanel::right("Debug").show(ctx, |ui| {
             ui.heading("Debug Panel");
             ui.separator();
             ui.label(frame_str);
             ui.separator();
+            ui.label(framerate_str);
+            ui.separator();
             ui.label(elapsed_str);
             ui.separator();
             Self::debug_registers(ui, self.nes.cpu_ref().get_registers());
         });
 
-        CentralPanel::default().show(ctx, |_ui: &mut egui::Ui| {});
+        CentralPanel::default().show(ctx, |_ui: &mut egui::Ui| {
+            // TODO: put the nes image herecargo run --profile=release-lto
+        });
         // force refresh
         ctx.request_repaint();
     }
