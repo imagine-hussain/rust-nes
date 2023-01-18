@@ -104,7 +104,8 @@ impl Cpu {
     /// that do nothing (except increment the clock).
     pub fn tick(&mut self) {
         if !self.clock.is_ready() {
-            return;
+            self.clock.tick();
+            // return;
         }
         self.execute_clock_cycle();
     }
@@ -114,6 +115,7 @@ impl Cpu {
 
         // Fetch next instruction
         let opcode: OpCode = self.read(self.program_counter).into();
+        // println!("Instruction:\t {opcode:?}");
         self.program_counter += 1;
 
         // Always unused
@@ -138,7 +140,7 @@ impl Cpu {
         let additional_cycles = self.additional_cycle_operation & self.additional_cycle_addrmode;
         self.clock.add_cycles(additional_cycles as u64);
 
-        self.clock.tick();
+        // println!("reached end");
     }
 
     /// Fetch based on the current addressing mode. Stored in `self.fetched_data`

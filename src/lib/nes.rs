@@ -24,6 +24,7 @@ impl Nes {
         self.ppu.borrow_mut().tick();
 
         // Cpu is 3 times slower than PPU
+        let t = self.clock.total_ticks();
         if self.clock.total_ticks() % 3 == 0 {
             self.cpu.borrow_mut().tick();
         }
@@ -36,6 +37,11 @@ impl Nes {
         self.ppu.borrow_mut().insert_cartidge(cartridge);
     }
 
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
     pub fn cpu(&self) -> RcCell<Cpu> {
         self.cpu.clone()
     }
@@ -48,6 +54,11 @@ impl Nes {
         self.cpu.borrow_mut()
     }
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 }
 
 impl Default for Nes {
@@ -56,6 +67,7 @@ impl Default for Nes {
         let bus = cpu.borrow().get_bus();
         let clock = Clock::default();
         let ppu = Rc::new(RefCell::new(Ppu::default()));
+        bus.borrow_mut().connect_ppu(Rc::downgrade(&ppu));
 
         Self::new(cpu, bus, ppu, clock)
     }
