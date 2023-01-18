@@ -58,11 +58,24 @@ impl Gui {
         ui.label(status_str);
         ui.separator();
     }
+
+    fn simulate_nes_frame(&mut self) {
+        // Each frame is exactly 33277.5 frames; need to alternate
+        let cycles = match self.clock.total_ticks() % 2 == 0 {
+            true => 33278,
+            false => 33278,
+        };
+        for _ in 0..cycles {
+            self.nes.tick()
+        }
+    }
+
 }
 
 impl App for Gui {
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         self.clock.tick();
+        self.simulate_nes_frame();
         let frame_number = self.clock.total_ticks();
         let frame_str = fstrings::f!("Frame: {frame_number}");
 
@@ -79,6 +92,8 @@ impl App for Gui {
             Self::debug_registers(ui, self.nes.cpu_ref().get_registers());
         });
 
-        CentralPanel::default().show(ctx, |ui: &mut egui::Ui| {});
+        CentralPanel::default().show(ctx, |_ui: &mut egui::Ui| {});
+        // force refresh
+        ctx.request_repaint();
     }
 }

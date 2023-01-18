@@ -37,11 +37,6 @@ impl Nes {
         self.ppu.borrow_mut().insert_cartidge(cartridge);
     }
 
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
     pub fn cpu(&self) -> RcCell<Cpu> {
         self.cpu.clone()
     }
@@ -54,11 +49,6 @@ impl Nes {
         self.cpu.borrow_mut()
     }
 
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
->>>>>>> Stashed changes
 }
 
 impl Default for Nes {
