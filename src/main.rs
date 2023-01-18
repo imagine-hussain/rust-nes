@@ -1,20 +1,14 @@
-use std::time::Duration;
+use eframe::run_native;
 
-use lib::{rendering::Render, Nes};
+use lib::{egui::Gui, Nes};
 
 pub fn main() {
-    let mut _nes: Nes = Nes::default();
-    let mut r = Render::init().unwrap();
+    let nes: Nes = Nes::default();
+    let app = Gui::new(nes);
 
-    'running: loop {
-        // Todo: Pipe events to nes
-        // Todo: connect cartridge
-        // nes.tick();
-        if r.tick().is_err() {
-            break 'running;
-        }
-
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
-    }
-
+    run_native(
+        "Nes-Rs",
+        Gui::default_win_options(),
+        Box::new(|_cc| Box::new(app)),
+    );
 }

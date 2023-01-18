@@ -228,7 +228,9 @@ pub fn bpl_fn(cpu: &mut Cpu) -> u8 {
 /// processor status are pushed on the stack then the IRQ interrupt vector at $FFFE/F is loaded
 /// into the PC and the break flag in the status set to one.
 pub fn brk_fn(cpu: &mut Cpu) -> u8 {
-    cpu.program_counter += 1;
+    // shouldn't ever need to wrap on a real program but, for completeness,
+    // have it overflow
+    cpu.program_counter = cpu.program_counter.wrapping_add(1);
     cpu.set_flag(&CpuFlag::Interrupt);
 
     // Push PC to stack (2 bytes)
@@ -379,11 +381,12 @@ pub fn cpy_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if Register == M
 /// - N - Negative Flag     - Set if bit 7 of Register - M is set
 pub fn compare_values(cpu: &mut Cpu, register_val: u8) {
-    let rhs_val = cpu.fetch();
-    let result = ((register_val as u16 - rhs_val as u16) & 0x00FF) as u8;
-    cpu.set_or_clear_flag(&CpuFlag::Carry, register_val >= rhs_val);
-    cpu.set_or_clear_flag(&CpuFlag::Carry, result == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, result & 0x80 != 0);
+    let rhs = cpu.fetch();
+    // let result = ((register_val as i16 - rhs as u16) & 0x00FF) as u8;
+    cpu.set_or_clear_flag(&CpuFlag::Carry, register_val >= rhs);
+    cpu.set_or_clear_flag(&CpuFlag::Carry, register_val == rhs);
+    // TODO: fix this to prevent underflow
+    // cpu.set_or_clear_flag(&CpuFlag::Negative, result & 0x80 != 0);
 }
 
 /// # Decrement Memory

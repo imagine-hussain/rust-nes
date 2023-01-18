@@ -1,4 +1,4 @@
-use std::{rc::Rc, cell::RefCell};
+use std::{rc::Rc, cell::{RefCell, Ref, RefMut}};
 
 use crate::{Bus, Clock, Cpu, Ppu, RcCell, Cartridge, Reset};
 
@@ -24,6 +24,7 @@ impl Nes {
         self.ppu.borrow_mut().tick();
 
         // Cpu is 3 times slower than PPU
+        let t = self.clock.total_ticks();
         if self.clock.total_ticks() % 3 == 0 {
             self.cpu.borrow_mut().tick();
         }
@@ -36,6 +37,18 @@ impl Nes {
         self.ppu.borrow_mut().insert_cartidge(cartridge);
     }
 
+    pub fn cpu(&self) -> RcCell<Cpu> {
+        self.cpu.clone()
+    }
+
+    pub fn cpu_ref(&self) -> Ref<Cpu> {
+        self.cpu.borrow()
+    }
+
+    pub fn cpu_mut(&self) -> RefMut<Cpu> {
+        self.cpu.borrow_mut()
+    }
+
 }
 
 impl Default for Nes {
@@ -44,6 +57,7 @@ impl Default for Nes {
         let bus = cpu.borrow().get_bus();
         let clock = Clock::default();
         let ppu = Rc::new(RefCell::new(Ppu::default()));
+        bus.borrow_mut().connect_ppu(Rc::downgrade(&ppu));
 
         Self::new(cpu, bus, ppu, clock)
     }
