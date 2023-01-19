@@ -1,5 +1,16 @@
 # rust-nes
 
+<!--toc:start-->
+- [rust-nes](#rust-nes)
+  - [Install / Usage](#install-usage)
+  - [Status](#status)
+    - [TODO](#todo)
+<!--toc:end-->
+
+![GitHub repo size](https://img.shields.io/github/repo-size/imagine-hussain/rust-nes)
+![Lines of code](https://img.shields.io/tokei/lines/github/imagine-hussain/rust-nes)
+
+
 A **BLAZINGLY FAST** rust emulator for the NES.
 
 ## Install / Usage
@@ -57,4 +68,6 @@ most games to work. 2127 / 2418 = 88%.
     - [ ] Speed-up / Slow-down Execution
     - [ ] Pause / Inspect
     - [ ] Save Game-State
+
+- [ ] Add GitHub CI/CD to ensure builds on Windows are succesful.
 
