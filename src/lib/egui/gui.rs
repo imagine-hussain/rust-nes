@@ -211,6 +211,7 @@ impl Gui {
                     println!("Made cartridge");
 
                     self.nes.insert_cartidge(Some(cartridge));
+                    self.nes.reset();
                     assert!(self.nes.cartridge_ref().is_some());
                 }
             }
