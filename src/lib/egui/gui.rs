@@ -216,5 +216,12 @@ impl Gui {
                 }
             }
         }
+
+        if (ui.button("Eject")).clicked() {
+            self.nes.insert_cartidge(None);
+            self.nes.reset();
+            self.opened_file = None;
+        }
+
     }
 }
