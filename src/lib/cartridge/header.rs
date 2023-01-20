@@ -33,6 +33,7 @@ impl Header {
     }
 }
 
+#[derive(Debug)]
 pub enum HeaderParseError {
     InvalidStreamLength,
     NoNesConstant,
@@ -65,6 +66,10 @@ impl TryFrom<&[u8; 16]> for Header {
 
         if bytestream[0..4] != [b'N', b'E', b'S', 0x1A] {
             return Err(HeaderParseError::NoNesConstant);
+        }
+
+        for hex in bytestream.iter() {
+            println!("{}\t{:x}", hex, hex);
         }
 
         Ok(Self {

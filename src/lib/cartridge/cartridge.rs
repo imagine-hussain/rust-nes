@@ -8,9 +8,11 @@ use crate::{
 use super::{header::HeaderParseError, Header};
 
 /// Program is in 16Kb Chunks
-const PRG_CHUNK_SIZE: usize = 0x4000;
+// const PRG_CHUNK_SIZE: usize = 0x4000;
+const PRG_CHUNK_SIZE: usize = 16384;
 /// Characters chunks are 8Kb
-const CHR_CHUNK_SIZE: usize = 0x2000;
+// const CHR_CHUNK_SIZE: usize = 0x2000;
+const CHR_CHUNK_SIZE: usize = 8192;
 
 /// # Cartridge
 ///
@@ -46,10 +48,20 @@ impl Cartridge {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#[derive(Debug)]
 pub enum CartridgeParseError {
     InvalidHeader(HeaderParseError),
     ProgramRomCutsOff,
     CharacterRomCutsOff,
+}
+
+impl TryFrom<Vec<u8>> for Cartridge {
+    type Error = CartridgeParseError;
+
+    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+        let slice = &value[..];
+        slice.try_into()
+    }
 }
 
 impl TryFrom<&[u8]> for Cartridge {
@@ -67,36 +79,56 @@ impl TryFrom<&[u8]> for Cartridge {
     fn try_from(bytestream: &[u8]) -> Result<Self, Self::Error> {
         use CartridgeParseError::*;
 
-        let header: Header = match Header::try_from(bytestream) {
+        let header: Header = match Header::try_from(&bytestream[..16]) {
             Ok(header) => header,
             Err(e) => return Err(InvalidHeader(e)),
         };
 
+        println!("Header: {:?}", header);
+
+        let bytestream = &bytestream[16..];
+        println!("remaining: {}", bytestream.len());
+
         // TODO: Do something other than just ignore the training data?
         let has_trainer = header.has_trainer();
+        println!("Has Trainer: {}", has_trainer);
 
         // Program Memory
         let bytestream = match has_trainer {
             true => &bytestream[16 + 512..],
             false => &bytestream[16..],
         };
+        println!("after trainer: remaining: {}", bytestream.len());
+
         let program_banks_count = header.prg_rom_size;
         let prg_size = program_banks_count as usize * PRG_CHUNK_SIZE;
+        println!("PRG Size: {}", prg_size);
+
         let virtual_program_memory = match bytestream.len() < prg_size {
             true => return Err(ProgramRomCutsOff),
             false => bytestream[..prg_size].to_vec(),
         };
+        println!("after prg: remaiing: {}", bytestream.len());
 
         // Character Memory
         let bytestream = &bytestream[prg_size..];
+        println!("len: {}", bytestream.len());
         let character_banks_count = header.prg_rom_size;
         let chr_size = program_banks_count as usize * CHR_CHUNK_SIZE;
+        println!("Remaining bytestream length: {}", bytestream.len());
+        println!("Required length: {}", chr_size);
         let virtual_character_memory = match bytestream.len() < chr_size {
-            true => return Err(CharacterRomCutsOff),
+            // TODO: can't just Err here because of mirroring
+            // true => return Err(CharacterRomCutsOff),
+            true => bytestream[..].to_vec(),
             false => bytestream[..chr_size].to_vec(),
         };
 
+        // let bytestream = &bytestream[chr_size..];
+        // println!("at very end: remaining: {}", bytestream.len());
+
         let mapper_id = header.mapper_id();
+        println!("mapperid: {}", mapper_id);
         // Currently only support Mapper 000
         let mapper = select_mapper(mapper_id, &header);
 

@@ -17,6 +17,7 @@ use crate::cpu::cpu::Registers;
 use crate::Cartridge;
 use crate::Clock;
 use crate::Nes;
+use crate::RcCell;
 use crate::Reset;
 
 pub struct Gui {
@@ -101,7 +102,7 @@ impl Gui {
 }
 
 impl App for Gui {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.clock.tick();
         self.simulate_nes_frame();
 
@@ -129,6 +130,8 @@ impl App for Gui {
             ui.label(elapsed_str);
             ui.separator();
             Self::debug_registers(ui, self.nes.cpu_ref().get_registers());
+            ui.separator();
+            Self::cartridge_info(ui, self.nes.cartridge_ref());
         });
 
         SidePanel::left("Toolbar").show(ctx, |ui| {
@@ -144,6 +147,37 @@ impl App for Gui {
 }
 
 impl Gui {
+    fn cartridge_info(ui: &mut Ui, cartridge: Option<RcCell<Cartridge>>) {
+        ui.heading("Cartridge Info");
+        let c = match cartridge {
+            Some(c) => c,
+            None => {
+                ui.label("No cartridge loaded");
+                return;
+            }
+        };
+        let c = c.borrow();
+
+        let header = c.header;
+        let program_rom_size = header.prg_rom_size;
+        let program_chr_size = header.prg_chr_size;
+        let mapper = c.mapper_id;
+        let flag_6 = header.flag_6;
+        let flag_7 = header.flag_7;
+
+        let program_rom_size_str = f!("Program ROM Size: {program_rom_size} chunks");
+        let program_chr_size_str = f!("Program CHR Size: {program_chr_size} chunks");
+        let flag_6_str = f!("Flag 6: {flag_6:#04x}");
+        let flag_7_str = f!("Flag 7: {flag_7:#04x}");
+        let mapper_str = f!("Mapper: {mapper}");
+
+        ui.label(program_rom_size_str);
+        ui.label(program_chr_size_str);
+        ui.label(flag_6_str);
+        ui.label(flag_7_str);
+        ui.label(mapper_str);
+    }
+
     fn render_toolbar(&mut self, ctx: &Context, ui: &mut Ui) {
         ui.heading("Toolbar");
         ui.separator();
@@ -161,11 +195,23 @@ impl Gui {
             if dialog.show(ctx).selected() {
                 if let Some(file) = dialog.path() {
                     self.opened_file = Some(file.clone());
-                    let file_contents = std::fs::read_to_string(file).unwrap_or_default();
-                    let cartridge = Cartridge::try_from(file_contents.as_bytes())
-                        .ok()
-                        .map(|c| Rc::new(RefCell::new(c)));
-                    self.nes.insert_cartidge(cartridge);
+                    let file_contents = match std::fs::read(file) {
+                        Ok(contents) => contents,
+                        Err(e) => {
+                            eprintln!("Error reading file: {}", e);
+                            return;
+                        }
+                    };
+                    println!("File contents: {}", file_contents.len());
+
+                    let cartridge = Cartridge::try_from(file_contents)
+                        .map(|c| Rc::new(RefCell::new(c)))
+                        .expect("Failed to load cartridge");
+
+                    println!("Made cartridge");
+
+                    self.nes.insert_cartidge(Some(cartridge));
+                    assert!(self.nes.cartridge_ref().is_some());
                 }
             }
         }

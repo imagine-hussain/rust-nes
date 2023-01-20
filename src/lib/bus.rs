@@ -1,4 +1,4 @@
-use std::ops::RangeInclusive;
+use std::{ops::RangeInclusive, cell::Ref};
 
 use crate::{Cartridge, Clock, Cpu, Ppu, RcCell, Reset, WeakCell};
 
@@ -86,6 +86,14 @@ impl Bus {
     pub fn insert_cartridge(&mut self, cartridge: Option<RcCell<Cartridge>>) {
         self.cartridge = cartridge;
     }
+
+    pub fn cartridge_ref(&self) -> Option<Ref<Cartridge>> {
+        match self.cartridge {
+            Some(ref cartridge) => Some(cartridge.borrow()),
+            None => None,
+        }
+    }
+
 }
 
 impl Default for Bus {

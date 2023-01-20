@@ -20,10 +20,10 @@ pub trait Mapper {
     fn map_ppu_write(&mut self, addr: u16, new_addr: &mut u16) -> bool;
 }
 
-/// Represents the state of an address after it has been mapped
-/// TODO: use this places
-pub enum MappedAddressStatus {
-    Changed,
-    Unchanged,
-}
+// /// Represents the state of an address after it has been mapped
+// /// TODO: use this places
+// pub enum MappedAddressStatus {
+//     Changed,
+//     Unchanged,
+// }
 

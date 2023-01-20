@@ -24,7 +24,6 @@ impl Nes {
         self.ppu.borrow_mut().tick();
 
         // Cpu is 3 times slower than PPU
-        let t = self.clock.total_ticks();
         if self.clock.total_ticks() % 3 == 0 {
             self.cpu.borrow_mut().tick();
         }
@@ -43,6 +42,11 @@ impl Nes {
 
     pub fn cpu_ref(&self) -> Ref<Cpu> {
         self.cpu.borrow()
+    }
+
+    pub fn cartridge_ref(&self) -> Option<RcCell<Cartridge>> {
+        self.bus.borrow().cartridge.clone()
+        // let bus = self.bus.borrow();
     }
 
     pub fn cpu_mut(&self) -> RefMut<Cpu> {
