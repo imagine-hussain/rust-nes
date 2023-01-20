@@ -61,6 +61,8 @@ most games to work. 2127 / 2418 = 88%.
     - [ ] Speed-up / Slow-down Execution
     - [ ] Pause / Inspect
     - [ ] Save Game-State
+    - [ ] Scaling
+    - [ ] Crt Shader
 
 - [ ] Add GitHub CI/CD to ensure builds on Windows are succesful.
 
