@@ -44,8 +44,8 @@ impl Ppu {
         self.memory[address as usize]
     }
 
-    pub fn insert_cartidge(&mut self, cartridge: RcCell<Cartridge>) {
-        self.cartridge = Some(cartridge);
+    pub fn insert_cartidge(&mut self, cartridge: Option<RcCell<Cartridge>>) {
+        self.cartridge = cartridge;
     }
 
     pub fn tick(&mut self) {

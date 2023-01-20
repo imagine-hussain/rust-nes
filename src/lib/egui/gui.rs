@@ -1,18 +1,23 @@
-use std::time::Duration;
+use std::cell::RefCell;
+use std::path::PathBuf;
+use std::rc::Rc;
 use std::time::Instant;
 
 use eframe::App;
 use eframe::NativeOptions;
 use egui::CentralPanel;
-use egui::RichText;
+use egui::Context;
 use egui::SidePanel;
 use egui::Ui;
+use egui_file::FileDialog;
 use fstrings::f;
 use fstrings::format_args_f;
 
 use crate::cpu::cpu::Registers;
+use crate::Cartridge;
 use crate::Clock;
 use crate::Nes;
+use crate::Reset;
 
 pub struct Gui {
     pub nes: Nes,
@@ -20,10 +25,11 @@ pub struct Gui {
     startup_time: Instant,
     last_frame: Instant,
     framerate: u32,
+    open_file_dialog: Option<FileDialog>,
+    opened_file: Option<PathBuf>,
 }
 
 impl Gui {
-
     const FRAMERATE_UPDATE_INTERVAL: u64 = 10;
 
     pub fn new(nes: Nes) -> Self {
@@ -33,6 +39,8 @@ impl Gui {
             startup_time: Instant::now(),
             last_frame: Instant::now(),
             framerate: 0,
+            open_file_dialog: None,
+            opened_file: None,
         }
     }
 
@@ -86,7 +94,7 @@ impl Gui {
         let delta_time = self.last_frame.elapsed().as_millis();
         self.framerate = match delta_time == 0 {
             true => 69,
-            false => ((Self::FRAMERATE_UPDATE_INTERVAL as u128 * 1_000) / delta_time) as u32
+            false => ((Self::FRAMERATE_UPDATE_INTERVAL as u128 * 1_000) / delta_time) as u32,
         };
         self.framerate
     }
@@ -123,10 +131,43 @@ impl App for Gui {
             Self::debug_registers(ui, self.nes.cpu_ref().get_registers());
         });
 
+        SidePanel::left("Toolbar").show(ctx, |ui| {
+            self.render_toolbar(ctx, ui);
+        });
+
         CentralPanel::default().show(ctx, |_ui: &mut egui::Ui| {
             // TODO: put the nes image herecargo run --profile=release-lto
         });
         // force refresh
         ctx.request_repaint();
+    }
+}
+
+impl Gui {
+    fn render_toolbar(&mut self, ctx: &Context, ui: &mut Ui) {
+        ui.heading("Toolbar");
+        ui.separator();
+        if ui.button("Reset").clicked() {
+            self.nes.reset();
+            self.clock.reset();
+        }
+        if (ui.button("Open")).clicked() {
+            let mut dialog = FileDialog::open_file(self.opened_file.clone());
+            dialog.open();
+            self.open_file_dialog = Some(dialog);
+        }
+
+        if let Some(dialog) = &mut self.open_file_dialog {
+            if dialog.show(ctx).selected() {
+                if let Some(file) = dialog.path() {
+                    self.opened_file = Some(file.clone());
+                    let file_contents = std::fs::read_to_string(file).unwrap_or_default();
+                    let cartridge = Cartridge::try_from(file_contents.as_bytes())
+                        .ok()
+                        .map(|c| Rc::new(RefCell::new(c)));
+                    self.nes.insert_cartidge(cartridge);
+                }
+            }
+        }
     }
 }

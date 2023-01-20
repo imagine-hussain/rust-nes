@@ -83,8 +83,8 @@ impl Bus {
         self.clock.tick();
     }
 
-    pub fn insert_cartridge(&mut self, cartridge: RcCell<Cartridge>) {
-        self.cartridge = Some(cartridge);
+    pub fn insert_cartridge(&mut self, cartridge: Option<RcCell<Cartridge>>) {
+        self.cartridge = cartridge;
     }
 }
 

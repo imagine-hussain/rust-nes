@@ -32,7 +32,7 @@ impl Nes {
         self.clock.tick();
     }
 
-    pub fn insert_cartidge(&mut self, cartridge: RcCell<Cartridge>) {
+    pub fn insert_cartidge(&mut self, cartridge: Option<RcCell<Cartridge>>) {
         self.bus.borrow_mut().insert_cartridge(cartridge.clone());
         self.ppu.borrow_mut().insert_cartidge(cartridge);
     }
