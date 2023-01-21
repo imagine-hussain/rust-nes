@@ -13,6 +13,8 @@ use egui_file::FileDialog;
 use fstrings::f;
 use fstrings::format_args_f;
 
+use thousands::Separable;
+
 use crate::cpu::cpu::Registers;
 use crate::Cartridge;
 use crate::Clock;
@@ -28,6 +30,7 @@ pub struct Gui {
     framerate: u32,
     open_file_dialog: Option<FileDialog>,
     opened_file: Option<PathBuf>,
+    playback_speed: Option<f64>,
 }
 
 impl Gui {
@@ -42,6 +45,7 @@ impl Gui {
             framerate: 0,
             open_file_dialog: None,
             opened_file: None,
+            playback_speed: None,
         }
     }
 
@@ -81,8 +85,8 @@ impl Gui {
         let cycles = match self.clock.total_ticks() % 2 == 0 {
             true => 33278,
             false => 33278,
-        };
-        for _ in 0..cycles {
+        } as f64 * self.playback_speed.unwrap_or(1.0);
+        for _ in 0..cycles.round() as u64 {
             self.nes.tick()
         }
     }
@@ -99,6 +103,11 @@ impl Gui {
         };
         self.framerate
     }
+
+    fn playback_speed(&self) -> f64 {
+        self.playback_speed.unwrap_or(1.0)
+    }
+
 }
 
 impl App for Gui {
@@ -119,6 +128,8 @@ impl App for Gui {
 
         let framerate = self.framerate;
         let framerate_str = f!("Framerate: {framerate}");
+        let cycles_count = self.nes.cpu_ref().clock.total_ticks().separate_with_commas();
+        let cycles_str = f!("Cycles: {cycles_count}");
 
         SidePanel::right("Debug").show(ctx, |ui| {
             ui.heading("Debug Panel");
@@ -128,6 +139,8 @@ impl App for Gui {
             ui.label(framerate_str);
             ui.separator();
             ui.label(elapsed_str);
+            ui.separator();
+            ui.label(cycles_str);
             ui.separator();
             Self::debug_registers(ui, self.nes.cpu_ref().get_registers());
             ui.separator();
@@ -222,6 +235,34 @@ impl Gui {
             self.nes.reset();
             self.opened_file = None;
         }
+
+        ui.heading("Playback Speed");
+        let mut playback = self.playback_speed();
+        ui.add(egui::widgets::Slider::new(&mut playback, 0.0_f64 ..=2.0_f64));
+        self.playback_speed = Some(playback);
+
+
+        // Scale the framerate to the playback speed
+        ui.horizontal(|ui| {
+            if (ui.button("Pause")).clicked() {
+                self.playback_speed = Some(0.0);
+            }
+            if (ui.button("Reset")).clicked() {
+                self.playback_speed = None;
+            }
+            if (ui.button("0.5")).clicked() {
+                self.playback_speed = Some(0.5);
+            }
+            if (ui.button("1x")).clicked() {
+                self.playback_speed = None;
+            }
+            if (ui.button("2x")).clicked() {
+                self.playback_speed = Some(2.0);
+            }
+            if (ui.button("4x")).clicked() {
+                self.playback_speed = Some(4.0);
+            }
+        });
 
     }
 }
