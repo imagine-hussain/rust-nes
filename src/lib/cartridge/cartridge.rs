@@ -1,4 +1,4 @@
-use std::vec::Vec;
+use std::{vec::Vec, path::Path, fs::File};
 
 use crate::{
     mappers::{select_mapper, Mapper000},
@@ -53,6 +53,7 @@ pub enum CartridgeParseError {
     InvalidHeader(HeaderParseError),
     ProgramRomCutsOff,
     CharacterRomCutsOff,
+    FileError(std::io::Error),
 }
 
 impl TryFrom<Vec<u8>> for Cartridge {
@@ -152,3 +153,20 @@ impl TryFrom<&[u8]> for Cartridge {
         })
     }
 }
+
+// impl TryFrom<&Path> for Cartridge {
+//     type Error = CartridgeParseError;
+//
+//     fn try_from(value: &Path) -> Result<Self, Self::Error> {
+//         // open the file and read all the contents into a vector
+//         let file = File::open(value).map_err(CartridgeParseError::FileError)?;
+//         let s: String = file.into();
+//         let mut reader = BufReader::new(file);
+//         let mut buffer = Vec::new();
+//         reader.read_to_end(&mut buffer).map_err(CartridgeParseError::FileError)?;
+//
+//
+//         todo!()
+//     }
+// }
+//
