@@ -1,8 +1,6 @@
 use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
-use std::thread::sleep;
-use std::time::Duration;
 use std::time::Instant;
 
 use eframe::App;
