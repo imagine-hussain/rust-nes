@@ -3,6 +3,7 @@
 ![GitHub repo size](https://img.shields.io/github/repo-size/imagine-hussain/rust-nes)
 ![Lines of code](https://img.shields.io/tokei/lines/github/imagine-hussain/rust-nes)
 ![Build](https://img.shields.io/github/actions/workflow/status/imagine-hussain/rust-nes/build.yml)
+![Clippy](https://img.shields.io/github/actions/workflow/status/imagine-hussain/rust-nes/build.yml?label=clippy)
 
 
 A **BLAZINGLY FAST** rust emulator for the NES.
