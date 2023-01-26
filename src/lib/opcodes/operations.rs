@@ -121,7 +121,7 @@ pub fn asl_fn(cpu: &mut Cpu) -> u8 {
 /// 2 Extra cycles if branch is onto a different bage
 pub fn relative_branch(cpu: &mut Cpu) -> u8 {
     let pc_old = cpu.program_counter;
-    cpu.program_counter = (cpu.program_counter as u16) + (cpu.relative_addr as i16) as u16;
+    cpu.program_counter += (cpu.relative_addr as i16) as u16;
 
     match (pc_old & 0xFF00) == (cpu.program_counter & 0xFF00) {
         true => 1,  // Same page -> 1

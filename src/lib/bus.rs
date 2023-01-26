@@ -88,10 +88,7 @@ impl Bus {
     }
 
     pub fn cartridge_ref(&self) -> Option<Ref<Cartridge>> {
-        match self.cartridge {
-            Some(ref cartridge) => Some(cartridge.borrow()),
-            None => None,
-        }
+        self.cartridge.as_ref().map(|cartridge| cartridge.borrow())
     }
 
 }

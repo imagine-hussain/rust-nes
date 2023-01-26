@@ -8,6 +8,7 @@ use crate::Cpu;
 /// operand from the memory, in the given CPU.
 /// Goated Resource: https://www.svaught.com/posts/addr-modes-6502
 #[derive(Debug)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum AddressingMode {
     /// Implied: No data in the instruction.
     /// This *can* be operating on the accumulator.
@@ -94,7 +95,7 @@ pub(self) mod fetching {
     }
 
     pub(super) fn fetch_zp0(cpu: &mut Cpu) -> u8 {
-        let offset = cpu.read(cpu.program_counter as u16);
+        let offset = cpu.read(cpu.program_counter);
 
         cpu.absolute_addr = offset as u16;
 
