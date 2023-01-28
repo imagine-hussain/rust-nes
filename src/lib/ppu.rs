@@ -3,6 +3,15 @@ use crate::{Cartridge, RcCell, Reset};
 /// # Emulation Structure for the Picture Processing Unit (PPU)
 ///
 /// <https://www.nesdev.org/wiki/PPU>
+///
+/// ## Memory Mapping
+/// The PPU has a an address space of 18kB. That is 0x0000 - 0x3FFF.
+/// This memory is accessible internally by the PPU or, externally, by the CPU,
+/// through the eight memory mapped registers at 0x2000 - 0x2007. in the CPU's
+/// address space. (Not that these are mirrored every 8 bytes from 0x2000-0x3FFF)
+///
+/// ## Memory Layout
+///
 pub struct Ppu {
     // Physical parts of the NES
     // Has got 10Kb of memory. Split up into into the following address spaces.

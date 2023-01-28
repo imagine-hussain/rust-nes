@@ -2,6 +2,10 @@ use std::{ops::RangeInclusive, cell::Ref};
 
 use crate::{Cartridge, Clock, Cpu, Ppu, RcCell, Reset, WeakCell};
 
+/// # Bus For NES
+///
+/// Connects all the components of the NES together, allowing them to communicate
+/// with each other.
 pub struct Bus {
     pub cpu: WeakCell<Cpu>,
     pub ppu: WeakCell<Ppu>,
