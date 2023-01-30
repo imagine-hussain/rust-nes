@@ -96,8 +96,8 @@ impl TryFrom<&[u8]> for Cartridge {
 
         // Program Memory
         let bytestream = match has_trainer {
-            true => &bytestream[16 + 512..],
-            false => &bytestream[16..],
+            true => &bytestream[512..],
+            false => &bytestream[..],
         };
         println!("after trainer: remaining: {}", bytestream.len());
 
