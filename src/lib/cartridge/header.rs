@@ -1,3 +1,5 @@
+use log::debug;
+
 /// # Header of the iNES file format
 ///
 /// ## Format
@@ -68,8 +70,10 @@ impl TryFrom<&[u8; 16]> for Header {
             return Err(HeaderParseError::NoNesConstant);
         }
 
-        for hex in bytestream.iter() {
-            println!("{}\t{:x}", hex, hex);
+
+        debug!("Header Bytes: ");
+        for byte in bytestream.iter() {
+            debug!("\t{}\t= 0x{:x}", byte, byte);
         }
 
         Ok(Self {

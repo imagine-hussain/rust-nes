@@ -113,19 +113,17 @@ impl TryFrom<&[u8]> for Cartridge {
             true => return Err(ProgramRomCutsOff),
             false => bytestream[..prg_size].to_vec(),
         };
+        let bytestream = &bytestream[prg_size..];
         log_read_progress("PROG Memory", bytestream, cartridge_size);
 
         // Character Memory
-        let bytestream = &bytestream[prg_size..];
-        debug!("len: {}", bytestream.len());
-        let character_banks_count = header.prg_rom_size; // TODO fix this wrong to prg_chr_size
-        let chr_size = program_banks_count as usize * CHR_CHUNK_SIZE;
+        let character_banks_count = header.prg_chr_size;
+        let chr_size = character_banks_count as usize * CHR_CHUNK_SIZE;
         let virtual_character_memory = match bytestream.len() < chr_size {
-            // TODO: can't just Err here because of mirroring
-            // true => return Err(CharacterRomCutsOff),
-            true => bytestream[..].to_vec(),
-            false => bytestream[..chr_size].to_vec(),
-        };
+            true => Err(CharacterRomCutsOff),
+            false => Ok(bytestream[..chr_size].to_vec()),
+        }?;
+        let bytestream = &bytestream[chr_size..];
         log_read_progress("Character Memory", bytestream, cartridge_size);
 
         // let bytestream = &bytestream[chr_size..];
@@ -133,7 +131,7 @@ impl TryFrom<&[u8]> for Cartridge {
 
         let mapper_id = header.mapper_id();
         debug!("Mapper ID: {}", mapper_id);
-        // Currently only support Mapper 000
+        // Currently only supports Mapper 000
         let mapper = select_mapper(mapper_id, &header);
 
         // To Dos
