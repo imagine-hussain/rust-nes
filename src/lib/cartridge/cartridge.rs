@@ -1,6 +1,9 @@
-use std::{vec::Vec, path::Path, fs::File};
+use std::vec::Vec;
+
+use log::debug;
 
 use crate::{
+    cartridge,
     mappers::{select_mapper, Mapper000},
     Mapper,
 };
@@ -42,8 +45,7 @@ impl Cartridge {
         }
     }
 
-    pub fn cpu_write() {
-    }
+    pub fn cpu_write() {}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -80,56 +82,57 @@ impl TryFrom<&[u8]> for Cartridge {
     fn try_from(bytestream: &[u8]) -> Result<Self, Self::Error> {
         use CartridgeParseError::*;
 
+        let cartridge_size = bytestream.len();
         let header: Header = match Header::try_from(&bytestream[..16]) {
             Ok(header) => header,
             Err(e) => return Err(InvalidHeader(e)),
         };
 
-        println!("Header: {:?}", header);
+        debug!("Header: {:?}", header);
 
         let bytestream = &bytestream[16..];
-        println!("remaining: {}", bytestream.len());
+        log_read_progress("Debug", bytestream, cartridge_size);
 
         // TODO: Do something other than just ignore the training data?
         let has_trainer = header.has_trainer();
-        println!("Has Trainer: {}", has_trainer);
+        debug!("Has Trainer: {}", has_trainer);
 
-        // Program Memory
+        // Trainer
         let bytestream = match has_trainer {
             true => &bytestream[512..],
             false => &bytestream[..],
         };
-        println!("after trainer: remaining: {}", bytestream.len());
+        log_read_progress("Trainer", bytestream, cartridge_size);
 
+        // PROGRAM_MEMORY
         let program_banks_count = header.prg_rom_size;
         let prg_size = program_banks_count as usize * PRG_CHUNK_SIZE;
-        println!("PRG Size: {}", prg_size);
+        debug!("PRG Size: {}", prg_size);
 
         let virtual_program_memory = match bytestream.len() < prg_size {
             true => return Err(ProgramRomCutsOff),
             false => bytestream[..prg_size].to_vec(),
         };
-        println!("after prg: remaiing: {}", bytestream.len());
+        log_read_progress("PROG Memory", bytestream, cartridge_size);
 
         // Character Memory
         let bytestream = &bytestream[prg_size..];
-        println!("len: {}", bytestream.len());
-        let character_banks_count = header.prg_rom_size;
+        debug!("len: {}", bytestream.len());
+        let character_banks_count = header.prg_rom_size; // TODO fix this wrong to prg_chr_size
         let chr_size = program_banks_count as usize * CHR_CHUNK_SIZE;
-        println!("Remaining bytestream length: {}", bytestream.len());
-        println!("Required length: {}", chr_size);
         let virtual_character_memory = match bytestream.len() < chr_size {
             // TODO: can't just Err here because of mirroring
             // true => return Err(CharacterRomCutsOff),
             true => bytestream[..].to_vec(),
             false => bytestream[..chr_size].to_vec(),
         };
+        log_read_progress("Character Memory", bytestream, cartridge_size);
 
         // let bytestream = &bytestream[chr_size..];
-        // println!("at very end: remaining: {}", bytestream.len());
+        // debug!("at very end: remaining: {}", bytestream.len());
 
         let mapper_id = header.mapper_id();
-        println!("mapperid: {}", mapper_id);
+        debug!("Mapper ID: {}", mapper_id);
         // Currently only support Mapper 000
         let mapper = select_mapper(mapper_id, &header);
 
@@ -154,19 +157,12 @@ impl TryFrom<&[u8]> for Cartridge {
     }
 }
 
-// impl TryFrom<&Path> for Cartridge {
-//     type Error = CartridgeParseError;
-//
-//     fn try_from(value: &Path) -> Result<Self, Self::Error> {
-//         // open the file and read all the contents into a vector
-//         let file = File::open(value).map_err(CartridgeParseError::FileError)?;
-//         let s: String = file.into();
-//         let mut reader = BufReader::new(file);
-//         let mut buffer = Vec::new();
-//         reader.read_to_end(&mut buffer).map_err(CartridgeParseError::FileError)?;
-//
-//
-//         todo!()
-//     }
-// }
-//
+fn log_read_progress(stage: &str, bytestream: &[u8], initial_size: usize) {
+    let remaining = bytestream.len();
+    let bytes_read = initial_size - remaining;
+    debug!(
+        "CartridgeDecode: Completed {} stage.\tRemaining bytes:{}. Read {} of {}",
+        stage, remaining, bytes_read, initial_size
+    );
+    // debug!("{}: {}", stage, bytestream.len());
+}
