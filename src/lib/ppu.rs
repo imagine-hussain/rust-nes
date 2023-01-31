@@ -10,8 +10,19 @@ use crate::{Cartridge, RcCell, Reset};
 /// through the eight memory mapped registers at 0x2000 - 0x2007. in the CPU's
 /// address space. (Not that these are mirrored every 8 bytes from 0x2000-0x3FFF)
 ///
-/// ## Memory Layout
-///
+/// ## Pallete Memory Map
+/// | Address         | Description                     |
+/// |-----------------|---------------------------------|
+/// | 0x3F00	      | Universal background color      |
+/// | 0x3F01 - 0x3F03 | Background palette 0            |
+/// | 0x3F05 - 0x3F07 | Background palette 1            |
+/// | 0x3F09 - 0x3F0B | Background palette 2            |
+/// | 0x3F0D - 0x3F0F | Background palette 3            |
+/// | 0x3F11 - 0x3F13 | Sprite palette 0                |
+/// | 0x3F15 - 0x3F17 | Sprite palette 1                |
+/// | 0x3F19 - 0x3F1B | Sprite palette 2                |
+/// | 0x3F1D - 0x3F1F | Sprite palette 3                |
+/// 
 pub struct Ppu {
     // Physical parts of the NES
     // Has got 10Kb of memory. Split up into into the following address spaces.
@@ -21,7 +32,14 @@ pub struct Ppu {
     pub cartridge: Option<RcCell<Cartridge>>,
     scanline: usize,
     cycle: usize,
-    // pattern: [u8; 8 * 1024],
+    // 
+    /// A tile is a 8x8 bitmap, where each pixel takes 2 bits, giving it access
+    /// to 4 colors.
+    /// The two bits are stored in a LSB and MSB bit-plane.
+    /// It takes 16 bytes to store a tile.
+    /// To calculate the *actual* colour of a pixel, we need to look up the
+    /// pallete information.
+    pub pattern: [u8; 8 * 1024],
     // name_table: [u8; 2 * 1024],
     // palette: [u8; 32],
 }
@@ -38,6 +56,7 @@ impl Ppu {
             _palette: [0; 32],
             memory: [0; 10 * 1024],
             scanline: 0,
+            pattern: [0; 8 * 1024],
             cycle: 0,
         }
     }

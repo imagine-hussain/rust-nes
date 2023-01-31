@@ -8,8 +8,8 @@ use crate::Mapper;
 /// https://www.nesdev.org/wiki/NROM
 ///
 /// ## Specification
-/// Support 16K or 32K PRG-ROM, 8K CHR-ROM.
-/// Uses a 32K address space for PRG-ROM regardless. If the ROM is onyl 16K
+/// Supports 16K or 32K PRG-ROM and 8K CHR-ROM.
+/// Uses a 32K address space for PRG-ROM regardless. If the ROM is only 16K
 /// then the last 16K is a mirror of the first 16K.
 /// (CPU)First 16K: 0x8000 - 0xBFFF
 /// (CPU)Last  16K: 0xC000 - 0xFFFF
