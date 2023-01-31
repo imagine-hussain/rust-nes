@@ -6,9 +6,28 @@ use crate::{Cartridge, Clock, Cpu, Ppu, RcCell, Reset, WeakCell};
 ///
 /// Connects all the components of the NES together, allowing them to communicate
 /// with each other.
+/// 
+/// ## Memory Layout - CPU
+/// 
+/// | Range           | Size | Description                                   |
+/// |-----------------|------|-----------------------------------------------|
+/// | 0x0000 - 0x07FF | 2KB  | Internal Cpu Ram                              |
+/// | 0x0800 - 0x0FFF | 2KB  | Mirror of Cpu Ram                             |
+/// | 0x1000 - 0x17FF | 2KB  | Mirror of Cpu Ram                             |
+/// | 0x1800 - 0x1FFF | 2KB  | Mirror of Cpu Ram                             |
+/// | 0x2000 - 0x2007 | 8B   | PPU Registers                                 |
+/// | 0x2008 - 0x3FFF | 8KB  | Mirrors of PPU Registers                      |
+/// | 0x4000 - 0x4017 | 24B  | APU and I/O Registers                         |
+/// | 0x4018 - 0x401F | 8B   | For Cpu Test Mode by APU / IO                 |
+/// | 0x4020 - 0xFFFF | 48KB | Cartridge Space (PRG ROM, PRG RAM, Mapper Reg)|
+/// | 0xFFFA - 0xFFFB | 2B   | NMI Vector                                    |
+/// | 0xFFFC - 0xFFFD | 2B   | Reset Vector                                  |
+/// | 0xFFFE - 0xFFFF | 2B   | IRQ / BRK Vector                              |
+/// 
 pub struct Bus {
     pub cpu: WeakCell<Cpu>,
     pub ppu: WeakCell<Ppu>,
+    /// See Memory Layout - CPU
     pub ram: [u8; 64 * 1024],
     pub cartridge: Option<RcCell<Cartridge>>,
     pub clock: Clock,
