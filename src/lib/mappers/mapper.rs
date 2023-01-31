@@ -11,6 +11,8 @@ pub trait Mapper {
     /// it is there if needed.
     fn new(header: &Header) -> Self;
 
+    // TODO: These should return a Option<u16> instead of a boolean flag
+
     /// Transform address from cpu to an address indexable in the ROM
     fn map_cpu_read(&mut self, addr: u16, new_addr: &mut u16) -> bool;
     /// Transform a
