@@ -34,10 +34,10 @@ pub struct Bus {
 }
 
 impl Bus {
-    const RAM_START: u16 = 0x0000;
-    const RAM_END: u16 = 0x1FFF;
-    pub const RAM_RANGE: RangeInclusive<u16> = Self::RAM_START..=Self::RAM_END;
-    pub const RAM_MIRROR_MASK: u16 = 0x07FF;
+    const CPU_RAM_START: u16 = 0x0000;
+    const CPU_RAM_END: u16 = 0x1FFF;
+    pub const CPU_RAM_RANGE: RangeInclusive<u16> = Self::CPU_RAM_START..=Self::CPU_RAM_END;
+    pub const CPU_RAM_MIRROR_MASK: u16 = 0x07FF;
 
     const PPU_START: u16 = 0x2000;
     const PPU_END: u16 = 0x3FFF;
@@ -78,9 +78,10 @@ impl Bus {
         self.ppu = ppu;
     }
 
+    /// Connects PPU to CPU BUS
     pub fn write_cpu(&mut self, address: u16, data: u8) {
-        if Self::RAM_RANGE.contains(&address) {
-            self.ram[(address as usize) & (Self::RAM_MIRROR_MASK as usize)] = data;
+        if Self::CPU_RAM_RANGE.contains(&address) {
+            self.ram[(address as usize) & (Self::CPU_RAM_MIRROR_MASK as usize)] = data;
         } else if Self::PPU_RANGE.contains(&address) {
             self.unwrap_ppu()
                 .borrow_mut()
@@ -90,15 +91,16 @@ impl Bus {
         }
     }
 
+    /// Connects PPU to CPU BUS
     pub fn read_cpu(&self, address: u16) -> u8 {
-        if Self::RAM_RANGE.contains(&address) {
-            self.ram[(address as usize) & (Self::RAM_MIRROR_MASK as usize)]
+        if Self::CPU_RAM_RANGE.contains(&address) {
+            self.ram[(address & Self::CPU_RAM_MIRROR_MASK) as usize]
         } else if Self::PPU_RANGE.contains(&address) {
             self.unwrap_ppu()
                 .borrow_mut()
                 .read_cpu(address & Self::PPU_MEMORY_MASK)
         } else {
-            0
+            panic!("Unimplemented read of address: {:04X}", address);
         }
     }
 
