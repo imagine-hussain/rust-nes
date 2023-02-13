@@ -15,7 +15,6 @@ A **BLAZINGLY FAST** rust emulator for the NES.
 ```bash
 git clone https://github.com/imagine-hussain/rust-nes.git
 cd rust-nes
-
 ```
 
 2. Compile using `cargo`. If you don't have cargo, install it [here](https://doc.rust-lang.org/cargo/getting-started/installation.html).
@@ -24,10 +23,16 @@ cd rust-nes
 cargo build --release
 ```
 
-3. Run. Information on Loading Rom Coming Soon:tm:.
+3. Run.
 ```bash
 cargo run
 ```
+
+4. Use the `Open` button in the toolbar to bring up a file-explorer and select the rom you wish to load. A git-ignored `/roms` folder has been provided for you, to have a convenient place to store your ROMS.
+
+<img width="538" alt="image" src="https://user-images.githubusercontent.com/93496985/218387295-bd5b08e6-ff58-43ef-9f86-703fb208a7e8.png">
+
+
 
 ## Status
 
