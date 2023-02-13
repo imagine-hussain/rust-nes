@@ -41,6 +41,7 @@ Non-functional WIP.
 - [x] Implement Cpu Cycling
 - [x] Implement Ppu
 - [x] Get a frontend working that renders *something*
+- [x] Add a file explorer and allow roms to be loaded in through the GUI.
 
 - [ ] Mappers. Aim is to have the 10 most common mappers complete, to allow
 most games to work. 2127 / 2418 = 88%.
@@ -56,15 +57,15 @@ most games to work. 2127 / 2418 = 88%.
     - [ ] Mapper 009 | 20  (0.83%)
 
 - [ ] APU
-- [ ] PPU
+- [ ] PPU - **CURRENT WORK IN PROGRESS**
 
 - Additional Emulator Features
-    - [ ] Pause
-    - [ ] Speed-up / Slow-down Execution
+    - [x] Pause
+    - [x] Speed-up / Slow-down Execution
     - [ ] Pause / Inspect
     - [ ] Save Game-State
     - [ ] Scaling
     - [ ] Crt Shader
 
-- [ ] Add GitHub CI/CD to ensure builds on Windows are succesful.
+- [x] Add GitHub CI/CD to ensure builds on Windows are succesful.
 
