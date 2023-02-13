@@ -6,9 +6,9 @@ use crate::{Cartridge, Clock, Cpu, Ppu, RcCell, Reset, WeakCell};
 ///
 /// Connects all the components of the NES together, allowing them to communicate
 /// with each other.
-/// 
+///
 /// ## Memory Layout - CPU
-/// 
+///
 /// | Range           | Size | Description                                   |
 /// |-----------------|------|-----------------------------------------------|
 /// | 0x0000 - 0x07FF | 2KB  | Internal Cpu Ram                              |
@@ -23,7 +23,7 @@ use crate::{Cartridge, Clock, Cpu, Ppu, RcCell, Reset, WeakCell};
 /// | 0xFFFA - 0xFFFB | 2B   | NMI Vector                                    |
 /// | 0xFFFC - 0xFFFD | 2B   | Reset Vector                                  |
 /// | 0xFFFE - 0xFFFF | 2B   | IRQ / BRK Vector                              |
-/// 
+///
 pub struct Bus {
     pub cpu: WeakCell<Cpu>,
     pub ppu: WeakCell<Ppu>,
@@ -87,7 +87,8 @@ impl Bus {
                 .borrow_mut()
                 .write_cpu(address & Self::PPU_MEMORY_MASK, data);
         } else {
-            panic!("Unimplemented write to address: {:04X}", address);
+            // panic!("Unimplemented write to address: {:04X}", address);
+            // 0
         }
     }
 
@@ -100,7 +101,8 @@ impl Bus {
                 .borrow_mut()
                 .read_cpu(address & Self::PPU_MEMORY_MASK)
         } else {
-            panic!("Unimplemented read of address: {:04X}", address);
+            // panic!("Unimplemented read of address: {:04X}", address);
+            0
         }
     }
 
