@@ -1,10 +1,9 @@
 use crate::cartridge::Header;
 
-
 /// # Mapper
 /// Trait to emulate the address mapper.
 ///
-/// https://www.nesdev.org/wiki/Mapper
+/// <https://www.nesdev.org/wiki/Mapper>
 pub trait Mapper {
     /// Construct a new maper, given the header metadata for the ROM
     /// Most of this information will not be used by most mappers, however
@@ -28,4 +27,3 @@ pub trait Mapper {
 //     Changed,
 //     Unchanged,
 // }
-

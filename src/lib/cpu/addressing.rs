@@ -1,12 +1,11 @@
 use self::fetching::*;
 use crate::Cpu;
 
-
 /// Functionality related to addressing modes.
 /// Exports an `AddressingMode` enum, where the variants are the different addressing
 /// modes. AddressingMode implements a `fetch` method to fetch the value of the
 /// operand from the memory, in the given CPU.
-/// Goated Resource: https://www.svaught.com/posts/addr-modes-6502
+/// Goated Resource: <https://www.svaught.com/posts/addr-modes-6502>
 #[derive(Debug)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum AddressingMode {
@@ -60,9 +59,7 @@ pub enum AddressingMode {
     IZY,
 }
 
-
 impl AddressingMode {
-
     pub fn fetch(&self) -> &'static dyn Fn(&mut Cpu) -> u8 {
         match *self {
             AddressingMode::IMP => &fetch_imp,

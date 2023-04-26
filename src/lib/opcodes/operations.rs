@@ -1,10 +1,10 @@
+use crate::cpu::AddressingMode;
+use crate::cpu::CpuFlag;
 /// Functions for each instruction
 ///
 /// Documentation from:
-/// https://www.nesdev.org/obelisk-6502-guide/reference.html
+/// <https://www.nesdev.org/obelisk-6502-guide/reference.html>
 use crate::Cpu;
-use crate::cpu::CpuFlag;
-use crate::cpu::AddressingMode;
 
 /// # Add with carry
 ///
@@ -245,8 +245,6 @@ pub fn brk_fn(cpu: &mut Cpu) -> u8 {
     cpu.clear_flag(&CpuFlag::Break);
 
     // Load PC from interrupt vector (Last 2 bytes of address space)
-
-
 
     0
 }
@@ -628,7 +626,6 @@ pub fn pla_fn(cpu: &mut Cpu) -> u8 {
     0
 }
 
-
 /// # Pull Status Register
 /// Pulls top value from the stack, into the status register
 /// ## Processor Status after use:
@@ -698,7 +695,6 @@ pub fn ror_fn(cpu: &mut Cpu) -> u8 {
 /// - V - Overflow Flag     - Set from stack
 /// - N - Negative Flag     - Set from stack
 pub fn rti_fn(cpu: &mut Cpu) -> u8 {
-
     cpu.status_register = cpu.pop_stack();
 
     // Unset Break and Unused since out of interrupt
@@ -755,7 +751,6 @@ pub fn sta_fn(cpu: &mut Cpu) -> u8 {
     cpu.write(cpu.absolute_addr, cpu.a_register);
     0
 }
-
 
 /// # Store X Register
 /// Stores the contents of X into memory
@@ -838,11 +833,9 @@ pub fn tya_fn(cpu: &mut Cpu) -> u8 {
     0
 }
 
-
 /// # Unofficial / Illegal Instructions
 /// Undefined. Should do nothing until implemented later.
 /// Currently, acts equivalently to NOP
 pub fn xxx_fn(_cpu: &mut Cpu) -> u8 {
     0
 }
-

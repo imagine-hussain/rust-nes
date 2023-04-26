@@ -5,7 +5,7 @@ use crate::Mapper;
 /// NES-NROM-256, their HVC counterparts, and clone boards.
 /// Mapper000 as per the standardised Nes Mapper guidelines on nesdev.org
 ///
-/// https://www.nesdev.org/wiki/NROM
+/// <https://www.nesdev.org/wiki/NROM>
 ///
 /// ## Specification
 /// Supports 16K or 32K PRG-ROM and 8K CHR-ROM.
@@ -61,7 +61,7 @@ impl Mapper for Mapper000 {
                 *new_addr = addr;
                 true
             }
-            false => false
+            false => false,
         }
     }
 
@@ -71,7 +71,7 @@ impl Mapper for Mapper000 {
                 *new_addr = addr;
                 true
             }
-            false => false
+            false => false,
         }
     }
 }

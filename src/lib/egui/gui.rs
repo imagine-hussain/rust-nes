@@ -60,7 +60,12 @@ impl Gui {
             let framerate = self.framerate;
             let framerate_str = f!("Framerate: {framerate}");
 
-            let cycles_count = self.nes.cpu_ref().clock.total_ticks().separate_with_commas();
+            let cycles_count = self
+                .nes
+                .cpu_ref()
+                .clock
+                .total_ticks()
+                .separate_with_commas();
             let cycles_str = f!("Cycles: {cycles_count}");
 
             let tick_number = self.clock.total_ticks();
@@ -115,7 +120,8 @@ impl Gui {
         let cycles = match self.clock.total_ticks() % 2 == 0 {
             true => 33278,
             false => 33278,
-        } as f64 * self.playback_speed.unwrap_or(1.0);
+        } as f64
+            * self.playback_speed.unwrap_or(1.0);
         for _ in 0..cycles.round() as u64 {
             self.nes.tick()
         }
@@ -137,16 +143,12 @@ impl Gui {
     fn playback_speed(&self) -> f64 {
         self.playback_speed.unwrap_or(1.0)
     }
-
 }
 
 impl App for Gui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.clock.tick();
         self.simulate_nes_frame();
-
-
-
 
         SidePanel::right("Debug").show(ctx, |ui| {
             ui.heading("Debug Panel");
@@ -172,7 +174,11 @@ impl App for Gui {
 }
 
 impl Gui {
-    fn cartridge_info(ui: &mut Ui, cartridge: Option<RcCell<Cartridge>>, opened_file: &Option<PathBuf>) {
+    fn cartridge_info(
+        ui: &mut Ui,
+        cartridge: Option<RcCell<Cartridge>>,
+        opened_file: &Option<PathBuf>,
+    ) {
         egui::CollapsingHeader::new("Cartridge Info").show(ui, |ui| {
             let c = match cartridge {
                 Some(c) => c,
@@ -257,9 +263,8 @@ impl Gui {
 
         ui.heading("Playback Speed");
         let mut playback = self.playback_speed();
-        ui.add(egui::widgets::Slider::new(&mut playback, 0.0_f64 ..=3.0_f64));
+        ui.add(egui::widgets::Slider::new(&mut playback, 0.0_f64..=3.0_f64));
         self.playback_speed = Some(playback);
-
 
         // Scale the framerate to the playback speed
         ui.horizontal(|ui| {
@@ -282,6 +287,5 @@ impl Gui {
                 self.playback_speed = Some(3.0);
             }
         });
-
     }
 }
