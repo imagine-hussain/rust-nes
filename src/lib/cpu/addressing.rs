@@ -1,4 +1,3 @@
-use self::fetching::*;
 use crate::Cpu;
 
 /// Functionality related to addressing modes.
@@ -62,18 +61,18 @@ pub enum AddressingMode {
 impl AddressingMode {
     pub fn fetch(&self) -> fn(&mut Cpu) -> u8 {
         match *self {
-            AddressingMode::IMP => fetch_imp,
-            AddressingMode::IMM => fetch_imm,
-            AddressingMode::ZP0 => fetch_zp0,
-            AddressingMode::ZPX => fetch_zpx,
-            AddressingMode::ZPY => fetch_zpy,
-            AddressingMode::REL => fetch_rel,
-            AddressingMode::ABS => fetch_abs,
-            AddressingMode::ABX => fetch_abx,
-            AddressingMode::ABY => fetch_aby,
-            AddressingMode::IND => fetch_ind,
-            AddressingMode::IZX => fetch_izx,
-            AddressingMode::IZY => fetch_izy,
+            AddressingMode::IMP => fetching::fetch_imp,
+            AddressingMode::IMM => fetching::fetch_imm,
+            AddressingMode::ZP0 => fetching::fetch_zp0,
+            AddressingMode::ZPX => fetching::fetch_zpx,
+            AddressingMode::ZPY => fetching::fetch_zpy,
+            AddressingMode::REL => fetching::fetch_rel,
+            AddressingMode::ABS => fetching::fetch_abs,
+            AddressingMode::ABX => fetching::fetch_abx,
+            AddressingMode::ABY => fetching::fetch_aby,
+            AddressingMode::IND => fetching::fetch_ind,
+            AddressingMode::IZX => fetching::fetch_izx,
+            AddressingMode::IZY => fetching::fetch_izy,
         }
     }
 }
