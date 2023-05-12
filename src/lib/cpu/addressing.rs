@@ -60,20 +60,20 @@ pub enum AddressingMode {
 }
 
 impl AddressingMode {
-    pub fn fetch(&self) -> &'static dyn Fn(&mut Cpu) -> u8 {
+    pub fn fetch(&self) -> fn(&mut Cpu) -> u8 {
         match *self {
-            AddressingMode::IMP => &fetch_imp,
-            AddressingMode::IMM => &fetch_imm,
-            AddressingMode::ZP0 => &fetch_zp0,
-            AddressingMode::ZPX => &fetch_zpx,
-            AddressingMode::ZPY => &fetch_zpy,
-            AddressingMode::REL => &fetch_rel,
-            AddressingMode::ABS => &fetch_abs,
-            AddressingMode::ABX => &fetch_abx,
-            AddressingMode::ABY => &fetch_aby,
-            AddressingMode::IND => &fetch_ind,
-            AddressingMode::IZX => &fetch_izx,
-            AddressingMode::IZY => &fetch_izy,
+            AddressingMode::IMP => fetch_imp,
+            AddressingMode::IMM => fetch_imm,
+            AddressingMode::ZP0 => fetch_zp0,
+            AddressingMode::ZPX => fetch_zpx,
+            AddressingMode::ZPY => fetch_zpy,
+            AddressingMode::REL => fetch_rel,
+            AddressingMode::ABS => fetch_abs,
+            AddressingMode::ABX => fetch_abx,
+            AddressingMode::ABY => fetch_aby,
+            AddressingMode::IND => fetch_ind,
+            AddressingMode::IZX => fetch_izx,
+            AddressingMode::IZY => fetch_izy,
         }
     }
 }
