@@ -3,7 +3,6 @@ use std::vec::Vec;
 use log::debug;
 
 use crate::{
-    cartridge,
     mappers::{select_mapper, Mapper000},
     Mapper,
 };

@@ -4,14 +4,15 @@ use crate::{
         flags::{clear_flag, set_flag, CpuFlag},
         AddressingMode,
     },
-    Bus, RcCell, opcodes::OpCode, Reset,
+    opcodes::OpCode,
+    Bus, RcCell, Reset,
 };
 use std::{cell::RefCell, rc::Rc};
 
 /// Emulator for the `6502` CPU.
 ///
 /// DataSheet:
-/// http://archive.6502.org/datasheets/rockwell_r650x_r651x.pdf
+/// <http://archive.6502.org/datasheets/rockwell_r650x_r651x.pdf>
 ///
 /// Datasheet of Rockewell 65c00 (not what's being emulated but, is backwards compatiable)
 ///
@@ -248,7 +249,6 @@ impl Cpu {
             program_counter: self.program_counter,
         }
     }
-
 }
 
 #[derive(Debug, Clone, Copy)]

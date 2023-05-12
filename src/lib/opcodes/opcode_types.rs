@@ -1,7 +1,6 @@
 use crate::Cpu;
 
 #[allow(clippy::upper_case_acronyms)]
-
 #[derive(Debug, Copy, Clone)]
 pub enum OpCodeType {
     ADC,
@@ -65,7 +64,7 @@ pub enum OpCodeType {
 }
 
 impl OpCodeType {
-    pub fn executable(&self) -> for<'r> fn(&'r mut Cpu) -> u8 {
+    pub fn executable(&self) -> fn(&mut Cpu) -> u8 {
         use self::OpCodeType::*;
         use super::operations::*;
 

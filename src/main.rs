@@ -1,9 +1,8 @@
 use std::{cell::RefCell, rc::Rc};
 
-use lib::{egui::Gui, Cartridge, Nes};
 use env_logger::Env;
+use lib::{egui::Gui, Cartridge, Nes};
 use log::{debug, error, info, trace, warn};
-
 
 pub fn main() {
     let mut app = Gui::new(Nes::default());
@@ -58,4 +57,3 @@ fn in_release_build() -> bool {
 fn in_release_build() -> bool {
     true
 }
-
