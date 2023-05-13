@@ -1,4 +1,4 @@
-use std::{ops::RangeInclusive, cell::Ref};
+use std::{cell::Ref, ops::RangeInclusive};
 
 use crate::{Cartridge, Clock, Cpu, Ppu, RcCell, Reset, WeakCell};
 
@@ -117,7 +117,6 @@ impl Bus {
     pub fn cartridge_ref(&self) -> Option<Ref<Cartridge>> {
         self.cartridge.as_ref().map(|cartridge| cartridge.borrow())
     }
-
 }
 
 impl Default for Bus {
