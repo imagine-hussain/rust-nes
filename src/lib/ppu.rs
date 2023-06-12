@@ -59,7 +59,6 @@ impl Ppu {
             scanline: 0,
             pattern: [0; 8 * 1024],
             cycle: 0,
-            pixels: Pixels::new(Self::SCREEN_WIDTH as _, Self::SCREEN_HEIGHT as _),
         }
     }
 
