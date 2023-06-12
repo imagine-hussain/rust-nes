@@ -1,3 +1,5 @@
+use pixels::Pixels;
+
 use crate::{Cartridge, RcCell, Reset};
 
 /// # Emulation Structure for the Picture Processing Unit (PPU)
@@ -22,7 +24,7 @@ use crate::{Cartridge, RcCell, Reset};
 /// | 0x3F15 - 0x3F17 | Sprite palette 1                |
 /// | 0x3F19 - 0x3F1B | Sprite palette 2                |
 /// | 0x3F1D - 0x3F1F | Sprite palette 3                |
-/// 
+///
 pub struct Ppu {
     // Physical parts of the NES
     // Has got 10Kb of memory. Split up into into the following address spaces.
@@ -32,7 +34,7 @@ pub struct Ppu {
     pub cartridge: Option<RcCell<Cartridge>>,
     scanline: usize,
     cycle: usize,
-    // 
+    //
     /// A tile is a 8x8 bitmap, where each pixel takes 2 bits, giving it access
     /// to 4 colors.
     /// The two bits are stored in a LSB and MSB bit-plane.
@@ -45,7 +47,6 @@ pub struct Ppu {
 }
 
 impl Ppu {
-
     pub const SCREEN_WIDTH: usize = 340;
     pub const SCREEN_HEIGHT: usize = 240;
 
@@ -58,6 +59,7 @@ impl Ppu {
             scanline: 0,
             pattern: [0; 8 * 1024],
             cycle: 0,
+            pixels: Pixels::new(Self::SCREEN_WIDTH as _, Self::SCREEN_HEIGHT as _),
         }
     }
 
@@ -103,4 +105,3 @@ impl Reset for Ppu {
         // self.memory = [0; 10 * 1024];
     }
 }
-

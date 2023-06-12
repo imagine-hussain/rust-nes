@@ -7,7 +7,7 @@ use log::{debug, error, info, trace, warn};
 pub fn main() {
     let mut app = Gui::new(Nes::default());
     startup_logger();
-    if let Some(cartridge_location) = std::env::args().collect::<Vec<_>>().get(1) {
+    if let Some(cartridge_location) = std::env::args().nth(1) {
         let nes: &mut Nes = &mut app.nes;
 
         let cartridge_file_contents =
@@ -18,11 +18,13 @@ pub fn main() {
         nes.insert_cartidge(Some(cartridge));
     }
 
+    info!("Starting Emulator");
     eframe::run_native(
         "Nes-Rs",
         Gui::default_win_options(),
         Box::new(|_cc| Box::new(app)),
     );
+    info!("Exiting now");
 }
 
 fn startup_logger() {
@@ -46,6 +48,7 @@ fn startup_logger() {
     info!("");
     info!("");
     info!("Logger set up successfully!");
+    info!("===============================================================");
 }
 
 #[cfg(debug_assertions)]
