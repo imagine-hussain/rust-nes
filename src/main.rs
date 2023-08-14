@@ -60,3 +60,5 @@ fn in_release_build() -> bool {
 fn in_release_build() -> bool {
     true
 }
+
+// copilot: write a hello world function

@@ -149,25 +149,28 @@ impl App for Gui {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.clock.tick();
         self.simulate_nes_frame();
-
-        SidePanel::right("Debug").show(ctx, |ui| {
-            ui.heading("Debug Panel");
-            ui.separator();
+        CentralPanel::default().show(ctx, |ui| {
             self.debug_frames_cycles(ui);
-            ui.separator();
-            Self::debug_registers(ui, self.nes.cpu_ref().get_registers());
-            ui.separator();
-            Self::cartridge_info(ui, self.nes.cartridge_ref(), &self.opened_file);
-            ui.separator();
         });
 
-        SidePanel::left("Toolbar").show(ctx, |ui| {
-            self.render_toolbar(ctx, ui);
-        });
+        // SidePanel::right("Debug").show(ctx, |ui| {
+        //     ui.heading("Debug Panel");
+        //     ui.separator();
+        //     self.debug_frames_cycles(ui);
+        //     ui.separator();
+        //     Self::debug_registers(ui, self.nes.cpu_ref().get_registers());
+        //     ui.separator();
+        //     Self::cartridge_info(ui, self.nes.cartridge_ref(), &self.opened_file);
+        //     ui.separator();
+        // });
 
-        CentralPanel::default().show(ctx, |_ui: &mut egui::Ui| {
-            // TODO: put the nes image herecargo run --profile=release-lto
-        });
+        // SidePanel::left("Toolbar").show(ctx, |ui| {
+        //     self.render_toolbar(ctx, ui);
+        // });
+
+        // CentralPanel::default().show(ctx, |_ui: &mut egui::Ui| {
+        //     // TODO: put the nes image herecargo run --profile=release-lto
+        // });
         // force refresh
         ctx.request_repaint();
     }
