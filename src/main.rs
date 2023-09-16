@@ -1,21 +1,21 @@
 use std::{cell::RefCell, rc::Rc};
 
-use env_logger::Env;
 use lib::{egui::Gui, Cartridge, Nes};
 use log::{debug, error, info, trace, warn};
 
 pub fn main() {
-    let mut app = Gui::new(Nes::default());
     startup_logger();
-    if let Some(cartridge_location) = std::env::args().nth(1) {
-        let nes: &mut Nes = &mut app.nes;
 
-        let cartridge_file_contents =
-            std::fs::read(cartridge_location).expect("Failed to read cartridge file");
-        let cartridge = Cartridge::try_from(cartridge_file_contents)
+    let mut app = Gui::new(Nes::default());
+
+    if let Some(cartright_path) = std::env::args().nth(1) {
+        let cartridge_bytes = std::fs::read(cartright_path).expect("Failed to read cartridge file");
+
+        let cartridge = Cartridge::try_from(cartridge_bytes)
             .map(|c| Rc::new(RefCell::new(c)))
             .expect("Failed to load cartridge");
-        nes.insert_cartidge(Some(cartridge));
+
+        app.nes.insert_cartidge(Some(cartridge));
     }
 
     info!("Starting Emulator");
@@ -33,7 +33,7 @@ fn startup_logger() {
         false => ("debug", "always"),
     };
 
-    let env = Env::default()
+    let env = env_logger::Env::default()
         .filter_or("MY_LOG", default_filter)
         .write_style_or("MY_LOG_STYLE", default_write);
 
@@ -60,5 +60,3 @@ fn in_release_build() -> bool {
 fn in_release_build() -> bool {
     true
 }
-
-// copilot: write a hello world function
