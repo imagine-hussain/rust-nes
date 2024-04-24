@@ -39,16 +39,16 @@ fn startup_logger() {
 
     env_logger::init_from_env(env);
 
-    trace!("This is a trace log. If you are running a release build, this should NOT be visible.");
-    debug!("This is a debug log. This should only be visible in debug builds.");
-    info!("This is an info log. If you are in a release build, you should see [INFO] [WARN] and [ERROR] logs only.");
-    warn!("This is a warning log. This should be visible in all builds.");
-    error!("This is an error log. If you see this, something has gone horribly wrong.");
-
-    info!("");
-    info!("");
-    info!("Logger set up successfully!");
-    info!("===============================================================");
+    // trace!("This is a trace log. If you are running a release build, this should NOT be visible.");
+    // debug!("This is a debug log. This should only be visible in debug builds.");
+    // info!("This is an info log. If you are in a release build, you should see [INFO] [WARN] and [ERROR] logs only.");
+    // warn!("This is a warning log. This should be visible in all builds.");
+    // error!("This is an error log. If you see this, something has gone horribly wrong.");
+    //
+    // info!("");
+    // info!("");
+    // info!("Logger set up successfully!");
+    // info!("===============================================================");
 }
 
 #[cfg(debug_assertions)]
