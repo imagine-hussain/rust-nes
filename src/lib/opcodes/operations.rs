@@ -234,8 +234,7 @@ pub fn brk_fn(cpu: &mut Cpu) -> u8 {
     cpu.set_flag(&CpuFlag::Interrupt);
 
     // Push PC to stack (2 bytes)
-    let hi = (cpu.program_counter >> 8) as u8;
-    let lo = cpu.program_counter as u8;
+    let [lo, hi] = cpu.program_counter.to_le_bytes();
     cpu.push_stack(hi);
     cpu.push_stack(lo);
 
@@ -701,9 +700,9 @@ pub fn rti_fn(cpu: &mut Cpu) -> u8 {
     cpu.clear_flag(&CpuFlag::Break);
     cpu.clear_flag(&CpuFlag::Unused);
 
-    let lo = cpu.pop_stack() as u16;
-    let hi = cpu.pop_stack() as u16;
-    cpu.program_counter = (hi << 8) | lo;
+    let lo = cpu.pop_stack();
+    let hi = cpu.pop_stack();
+    cpu.program_counter = u16::from_le_bytes([lo, hi]);
 
     0
 }
@@ -712,9 +711,9 @@ pub fn rti_fn(cpu: &mut Cpu) -> u8 {
 /// Used at the end of a subroutine to return to the calling routine.
 /// Pulls (program counter - 1) from the stack.
 pub fn rts_fn(cpu: &mut Cpu) -> u8 {
-    let lo = cpu.pop_stack() as u16;
-    let hi = cpu.pop_stack() as u16;
-    cpu.program_counter = (hi << 8 | lo) + 1;
+    let lo = cpu.pop_stack();
+    let hi = cpu.pop_stack();
+    cpu.program_counter = u16::from_le_bytes([lo, hi]) + 1;
     0
 }
 

@@ -209,9 +209,9 @@ impl Cpu {
 
         // Go to Interrupt Vector
         self.absolute_addr = pc_location;
-        let lo = self.read(self.absolute_addr) as u16;
-        let hi = self.read(self.absolute_addr + 1) as u16;
-        self.program_counter = (hi << 8) | lo;
+        let lo = self.read(self.absolute_addr);
+        let hi = self.read(self.absolute_addr + 1);
+        self.program_counter = u16::from_le_bytes([lo, hi]);
 
         self.clock.set_cycles(cycles);
     }
@@ -307,9 +307,9 @@ impl Reset for Cpu {
     fn reset(&mut self) {
         // Go to reset vector
         self.absolute_addr = Cpu::RESET_VECTOR;
-        let lo = self.read(self.absolute_addr) as u16;
-        let hi = self.read(self.absolute_addr + 1) as u16;
-        self.program_counter = (hi << 8) | lo; //  TODO: make a join function or macro
+        let lo = self.read(self.absolute_addr);
+        let hi = self.read(self.absolute_addr + 1);
+        self.program_counter = u16::from_le_bytes([lo, hi]);
 
         // Reset Internals to default
         self.a_register = 0;

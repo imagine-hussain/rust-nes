@@ -121,48 +121,49 @@ pub(self) mod fetching {
     }
 
     pub(super) fn fetch_abs(cpu: &mut Cpu) -> u8 {
-        let lo = cpu.read(cpu.program_counter) as u16;
+        let lo = cpu.read(cpu.program_counter);
         cpu.program_counter += 1;
-        let hi = cpu.read(cpu.program_counter) as u16;
+        let hi = cpu.read(cpu.program_counter);
         cpu.program_counter += 1;
 
-        cpu.absolute_addr = (hi << 8) | lo;
+        cpu.absolute_addr = u16::from_le_bytes([lo, hi]);
 
         0
     }
 
     pub(super) fn fetch_abx(cpu: &mut Cpu) -> u8 {
-        let lo = cpu.read(cpu.program_counter) as u16;
+        let lo = cpu.read(cpu.program_counter);
         cpu.program_counter += 1;
-        let hi = cpu.read(cpu.program_counter) as u16;
+        let hi = cpu.read(cpu.program_counter);
         cpu.program_counter += 1;
 
-        cpu.absolute_addr = ((hi << 8) | lo) + cpu.x_register as u16;
+        cpu.absolute_addr = u16::from_le_bytes([lo, hi]) + cpu.x_register as u16;
 
         // If page overflow, then add a cycle
-        match (cpu.absolute_addr & 0xFF00) != (hi << 8) {
+        match (cpu.absolute_addr & 0xFF00) != ((hi as u16) << 8) {
             true => 1,
             false => 0,
         }
     }
 
     pub(super) fn fetch_aby(cpu: &mut Cpu) -> u8 {
-        let lo = cpu.read(cpu.program_counter) as u16;
+        let lo = cpu.read(cpu.program_counter);
         cpu.program_counter += 1;
-        let hi = cpu.read(cpu.program_counter) as u16;
+        let hi = cpu.read(cpu.program_counter);
         cpu.program_counter += 1;
 
-        cpu.absolute_addr = ((hi << 8) | lo) + cpu.y_register as u16;
+        cpu.absolute_addr = u16::from_le_bytes([lo, hi]) + cpu.y_register as u16;
 
         // If page overflow, then add a cycle
         // (cpu.absolute_addr & 0xFF00) != (hi << 8)).into()
-        ((cpu.absolute_addr & 0xFF00) != (hi << 8)).into()
+        ((cpu.absolute_addr & 0xFF00) != ((hi as u16) << 8)).into()
     }
+
     pub(super) fn fetch_ind(cpu: &mut Cpu) -> u8 {
-        let lo = cpu.read(cpu.program_counter) as u16;
+        let lo = cpu.read(cpu.program_counter);
         cpu.program_counter += 1;
-        let hi = cpu.read(cpu.program_counter) as u16;
-        let ptr_addr: u16 = (hi << 8) | lo;
+        let hi = cpu.read(cpu.program_counter);
+        let ptr_addr: u16 = u16::from_le_bytes([lo, hi]);
 
         // Simulate page boundary hardware bug
         cpu.absolute_addr = match lo == 0x00FF {
@@ -170,9 +171,9 @@ pub(self) mod fetching {
             // Getting Hi bytes of pointer is at ptr_addr + 1, which is crossing a
             // page boundary. Instead, just wrap around to the start of the same
             // page
-            true => ((cpu.read(ptr_addr & 0xFF00) as u16) << 8) | (cpu.read(ptr_addr) as u16),
+            true => u16::from_le_bytes([cpu.read(ptr_addr), cpu.read(ptr_addr & 0xFF00)]),
             // Normal behaviour
-            false => ((cpu.read(ptr_addr + 1) as u16) << 8) | (cpu.read(ptr_addr) as u16),
+            false => u16::from_le_bytes([cpu.read(ptr_addr), cpu.read(ptr_addr + 1)]),
         };
 
         0
@@ -183,10 +184,10 @@ pub(self) mod fetching {
         cpu.program_counter += 1;
 
         // & 0x00FF to wrap around instead of moving to the next page
-        let lo = cpu.read(offset & 0x00FF) as u16;
-        let hi = cpu.read((offset + 1) & 0x00FF) as u16;
+        let lo = cpu.read(offset & 0x00FF);
+        let hi = cpu.read((offset + 1) & 0x00FF);
 
-        cpu.absolute_addr = (hi << 8) | lo;
+        cpu.absolute_addr = u16::from_le_bytes([lo, hi]);
 
         0
     }
@@ -195,12 +196,12 @@ pub(self) mod fetching {
         let offset: u16 = cpu.read(cpu.program_counter) as u16;
         cpu.program_counter += 1;
 
-        let lo = cpu.read(offset & 0x00FF) as u16;
-        let hi = cpu.read((offset + 1) & 0x00FF) as u16;
+        let lo = cpu.read(offset & 0x00FF);
+        let hi = cpu.read((offset + 1) & 0x00FF);
 
-        cpu.absolute_addr = ((hi << 8) | lo) + cpu.y_register as u16;
+        cpu.absolute_addr = u16::from_le_bytes([lo, hi]) + cpu.y_register as u16;
 
         // If page overflow, then add a cycle
-        ((cpu.absolute_addr & 0xFF00) != (hi << 8)).into()
+        ((cpu.absolute_addr & 0xFF00) != ((hi as u16) << 8)).into()
     }
 }
