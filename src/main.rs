@@ -1,3 +1,6 @@
+// TODO: hmmmm - mayve declare elsewhere
+pub mod tests;
+
 use std::{cell::RefCell, rc::Rc};
 
 use env_logger::Env;

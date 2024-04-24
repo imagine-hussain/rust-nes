@@ -7,7 +7,7 @@ use crate::{
     opcodes::OpCode,
     Bus, RcCell, Reset,
 };
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, fmt::format, rc::Rc};
 
 /// Emulator for the `6502` CPU.
 ///
@@ -248,6 +248,47 @@ impl Cpu {
             stack_pointer: self.stack_pointer,
             program_counter: self.program_counter,
         }
+    }
+
+    /// Trace current cpu state in nestest.log format
+    /// Example output line:
+    /// ```
+    /// C000  4C F5 C5  JMP $C5F5                       A:00 X:00 Y:00 P:24 SP:FD PPU:  0, 21 CYC:7
+    /// ```
+    ///
+    /// Columns:
+    /// - `program_counter`: `C000`
+    /// - `CPU opcode`: `4C F5 C5` - Variable len - Recall that opcodes are 1-3 bytes. In the case
+    /// of shorter opcodes, we keep the columns spacing consistent and left-align the text
+    /// - `CPU_opcode in ASM` -
+    /// - $80 + X = real address = mem value at real address ???
+    ///     @ 80 = 0100 = 00
+    ///     - first num is mem referenc ethat we get if we apply offsert to the request
+    ///       address based on addressing mode
+    ///     - then a u16  target fecthed from [0x80..0x81]
+    ///     - the content of that address cell
+    /// - rest of the cpu registers: A, X, Y, P, SP
+    /// - CPU and PPU clock cycles
+
+    pub fn nestest_trace(&mut self) -> String {
+        // Allocing = cringe?
+        let mut trace = String::with_capacity(92);
+        let pad_till_col = |s: &mut String, col: usize| {
+            let amount_to_pad = col - s.len();
+            s.extend(std::iter::repeat(' ').take(amount_to_pad));
+        };
+
+        trace.extend(format!("{:04X}", self.program_counter).chars());
+        pad_till_col(&mut trace, 6);
+        // Program Counter
+        let opcode: OpCode = self.read(self.program_counter).into();
+
+        // todo!("put in the raw opcode");
+        pad_till_col(&mut trace, 16);
+        // let x = opcode.decompile();
+
+        // C000  4C F5 C5  JMP $C5F5                       A:00 X:00 Y:00 P:24 SP:FD PPU:  0, 21 CYC:7
+        todo!("write the trace");
     }
 }
 
