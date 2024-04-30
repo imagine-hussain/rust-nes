@@ -57,12 +57,11 @@ pub enum CartridgeParseError {
     FileError(std::io::Error),
 }
 
-impl TryFrom<Vec<u8>> for Cartridge {
+impl TryFrom<&Vec<u8>> for Cartridge {
     type Error = CartridgeParseError;
 
-    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        let slice = &value[..];
-        slice.try_into()
+    fn try_from(value: &Vec<u8>) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_slice())
     }
 }
 
