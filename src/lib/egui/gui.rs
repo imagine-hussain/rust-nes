@@ -96,14 +96,14 @@ impl Gui {
                 x,
                 y,
                 status,
-                stack_pointer,
+                sp,
                 pc,
             } = registers;
             let a_str = f!("A:\t{a:#04x}");
             let x_str = f!("X:\t{x:#04x}");
             let y_str = f!("Y:\t{y:#04x}");
             let status_str = f!("Status:\t{status:#04x}");
-            let stack_pointer_str = f!("Stack Pointer:\t{stack_pointer:#04x}");
+            let stack_pointer_str = f!("Stack Pointer:\t{sp:#04x}");
             let program_counter_str = f!("Program Counter:\t{pc:#04x}");
 
             ui.label(a_str);

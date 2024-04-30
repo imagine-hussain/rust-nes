@@ -77,7 +77,7 @@ impl Cpu {
                 a: 0,
                 x: 0,
                 y: 0,
-                stack_pointer: 0,
+                sp: 0,
                 pc: 0,
                 status: 0,
             },
@@ -172,14 +172,14 @@ impl Cpu {
 
     #[inline(always)]
     pub fn push_stack(&mut self, data: u8) {
-        self.write(Cpu::STACK_BASE + self.registers.stack_pointer as u16, data);
-        self.registers.stack_pointer = self.registers.stack_pointer.wrapping_sub(1);
+        self.write(Cpu::STACK_BASE + self.registers.sp as u16, data);
+        self.registers.sp = self.registers.sp.wrapping_sub(1);
     }
 
     #[inline(always)]
     pub fn pop_stack(&mut self) -> u8 {
-        self.registers.stack_pointer += 1;
-        self.read(Cpu::STACK_BASE + self.registers.stack_pointer as u16)
+        self.registers.sp += 1;
+        self.read(Cpu::STACK_BASE + self.registers.sp as u16)
     }
 
     /// Trigger an interrupt if the disable interrupt flag is not set.
@@ -249,7 +249,7 @@ pub struct Registers {
     pub x: u8,
     pub y: u8,
     pub status: u8,
-    pub stack_pointer: u8,
+    pub sp: u8,
     pub pc: u16,
 }
 impl Reset for Cpu {
@@ -265,7 +265,7 @@ impl Reset for Cpu {
         self.registers.a = 0;
         self.registers.x = 0;
         self.registers.y = 0;
-        self.registers.stack_pointer = Cpu::STACK_POINTER_RESET;
+        self.registers.sp = Cpu::STACK_POINTER_RESET;
         self.registers.status = CpuFlag::Unused as u8;
 
         self.additional_cycle_addrmode = 0;

@@ -797,7 +797,7 @@ pub fn tay_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if X is zero
 /// - N - Negative Flag     - Set if bit 7 of X is set
 pub fn tsx_fn(cpu: &mut Cpu) -> u8 {
-    cpu.registers.x = cpu.registers.stack_pointer;
+    cpu.registers.x = cpu.registers.sp;
     cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.x == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.x & 0x80 != 0);
     0
@@ -806,7 +806,7 @@ pub fn tsx_fn(cpu: &mut Cpu) -> u8 {
 /// # Transfer X to Stack Pointer
 /// Copies the contents of the X register into the stack pointer
 pub fn txs_fn(cpu: &mut Cpu) -> u8 {
-    cpu.registers.stack_pointer = cpu.registers.x;
+    cpu.registers.sp = cpu.registers.x;
     0
 }
 
