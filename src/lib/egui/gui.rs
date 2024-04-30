@@ -89,7 +89,7 @@ impl Gui {
         });
     }
 
-    fn debug_registers(ui: &mut Ui, registers: Registers) {
+    fn debug_registers(ui: &mut Ui, registers: &Registers) {
         egui::CollapsingHeader::new("Registers").show(ui, |ui| {
             let Registers {
                 a,
@@ -97,14 +97,14 @@ impl Gui {
                 y,
                 status,
                 stack_pointer,
-                program_counter,
+                pc,
             } = registers;
             let a_str = f!("A:\t{a:#04x}");
             let x_str = f!("X:\t{x:#04x}");
             let y_str = f!("Y:\t{y:#04x}");
             let status_str = f!("Status:\t{status:#04x}");
             let stack_pointer_str = f!("Stack Pointer:\t{stack_pointer:#04x}");
-            let program_counter_str = f!("Program Counter:\t{program_counter:#04x}");
+            let program_counter_str = f!("Program Counter:\t{pc:#04x}");
 
             ui.label(a_str);
             ui.label(x_str);
@@ -155,7 +155,7 @@ impl App for Gui {
             ui.separator();
             self.debug_frames_cycles(ui);
             ui.separator();
-            Self::debug_registers(ui, self.nes.cpu_ref().get_registers());
+            Self::debug_registers(ui, &self.nes.cpu_ref().registers);
             ui.separator();
             Self::cartridge_info(ui, self.nes.cartridge_ref(), &self.opened_file);
             ui.separator();
@@ -242,7 +242,7 @@ impl Gui {
                     };
                     println!("File contents: {}", file_contents.len());
 
-                    let cartridge = Cartridge::try_from(file_contents)
+                    let cartridge = Cartridge::try_from(&file_contents)
                         .map(|c| Rc::new(RefCell::new(c)))
                         .expect("Failed to load cartridge");
 

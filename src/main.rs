@@ -15,7 +15,7 @@ pub fn main() {
 
         let cartridge_file_contents =
             std::fs::read(cartridge_location).expect("Failed to read cartridge file");
-        let cartridge = Cartridge::try_from(cartridge_file_contents)
+        let cartridge = Cartridge::try_from(&cartridge_file_contents)
             .map(|c| Rc::new(RefCell::new(c)))
             .expect("Failed to load cartridge");
         nes.insert_cartidge(Some(cartridge));

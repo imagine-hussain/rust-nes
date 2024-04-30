@@ -7,7 +7,7 @@ use crate::{
     opcodes::OpCode,
     Bus, RcCell, Reset,
 };
-use std::{cell::RefCell, fmt::format, rc::Rc};
+use std::{cell::RefCell, rc::Rc};
 
 /// Emulator for the `6502` CPU.
 ///
@@ -43,20 +43,21 @@ use std::{cell::RefCell, fmt::format, rc::Rc};
 pub struct Cpu {
     pub bus: RcCell<Bus>,
     pub clock: Clock,
-    pub a_register: u8,       // Accumulator
-    pub x_register: u8,       // X Register
-    pub y_register: u8,       // Y Register
-    pub stack_pointer: u8,    // Stack Pointer
-    pub program_counter: u16, // Program Counter
-    pub status_register: u8,  // Status Register
+    pub registers: Registers,
+    // pub a_register: u8,       // Accumulator
+    // pub x_register: u8,       // X Register
+    // pub y_register: u8,       // Y Register
+    // pub stack_pointer: u8,    // Stack Pointer
+    // pub program_counter: u16, // Program Counter
+    // pub status_register: u8,  // Status Register
     ///
     /// Not "real" parts of the hardware but for emulation
     pub fetched_data: u8, // Fetched data - temp storage
-    pub absolute_addr: u16,   // Absolute address being read off
-    pub relative_addr: i8,    // Address relative to abs address
+    pub absolute_addr: u16,              // Absolute address being read off
+    pub relative_addr: i8,               // Address relative to abs address
     pub addressing_mode: AddressingMode, // Addressing mode
-    pub additional_cycle_addrmode: u8, // Additional cycles for addressing mode
-    pub additional_cycle_operation: u8, // Additional cycles for operation
+    pub additional_cycle_addrmode: u8,   // Additional cycles for addressing mode
+    pub additional_cycle_operation: u8,  // Additional cycles for operation
 }
 
 impl Cpu {
@@ -72,12 +73,14 @@ impl Cpu {
         let new_cpu = Rc::new(RefCell::new(Self {
             bus: tmp_bus,
             clock: Clock::default(),
-            a_register: 0,
-            x_register: 0,
-            y_register: 0,
-            stack_pointer: 0,
-            program_counter: 0,
-            status_register: 0,
+            registers: Registers {
+                a: 0,
+                x: 0,
+                y: 0,
+                stack_pointer: 0,
+                pc: 0,
+                status: 0,
+            },
             fetched_data: 0,
             absolute_addr: 0,
             relative_addr: 0,
@@ -115,9 +118,9 @@ impl Cpu {
         // Not ready yet.
 
         // Fetch next instruction
-        let opcode: OpCode = self.read(self.program_counter).into();
+        let opcode: OpCode = self.read(self.registers.pc).into();
         // println!("Instruction:\t {opcode:?}");
-        self.program_counter += 1;
+        self.registers.pc += 1;
 
         // Always unused
         self.set_flag(&CpuFlag::Unused);
@@ -169,14 +172,14 @@ impl Cpu {
 
     #[inline(always)]
     pub fn push_stack(&mut self, data: u8) {
-        self.write(Cpu::STACK_BASE + self.stack_pointer as u16, data);
-        self.stack_pointer = self.stack_pointer.wrapping_sub(1);
+        self.write(Cpu::STACK_BASE + self.registers.stack_pointer as u16, data);
+        self.registers.stack_pointer = self.registers.stack_pointer.wrapping_sub(1);
     }
 
     #[inline(always)]
     pub fn pop_stack(&mut self) -> u8 {
-        self.stack_pointer += 1;
-        self.read(Cpu::STACK_BASE + self.stack_pointer as u16)
+        self.registers.stack_pointer += 1;
+        self.read(Cpu::STACK_BASE + self.registers.stack_pointer as u16)
     }
 
     /// Trigger an interrupt if the disable interrupt flag is not set.
@@ -198,37 +201,37 @@ impl Cpu {
 
     fn interrupt(&mut self, pc_location: u16, cycles: u64) {
         // Push PC to Stack
-        self.push_stack((self.program_counter & 0x00FF) as u8); // Lo
-        self.push_stack((self.program_counter & 0xFF00) as u8); // Hi
+        self.push_stack((self.registers.pc & 0x00FF) as u8); // Lo
+        self.push_stack((self.registers.pc & 0xFF00) as u8); // Hi
 
         // Push Status Register to Stack
         self.set_flag(&CpuFlag::Break);
         self.set_flag(&CpuFlag::Interrupt);
         self.set_flag(&CpuFlag::Unused);
-        self.push_stack(self.status_register);
+        self.push_stack(self.registers.status);
 
         // Go to Interrupt Vector
         self.absolute_addr = pc_location;
         let lo = self.read(self.absolute_addr);
         let hi = self.read(self.absolute_addr + 1);
-        self.program_counter = u16::from_le_bytes([lo, hi]);
+        self.registers.pc = u16::from_le_bytes([lo, hi]);
 
         self.clock.set_cycles(cycles);
     }
 
     #[inline]
     pub fn set_flag(&mut self, flag: &CpuFlag) {
-        self.status_register = set_flag(&self.status_register, flag)
+        self.registers.status = set_flag(&self.registers.status, flag)
     }
 
     #[inline]
     pub fn clear_flag(&mut self, flag: &CpuFlag) {
-        self.status_register = clear_flag(&self.status_register, flag)
+        self.registers.status = clear_flag(&self.registers.status, flag)
     }
 
     #[inline]
     pub fn get_flag(&self, flag: &CpuFlag) -> bool {
-        (self.status_register & *flag as u8) != 0
+        (self.registers.status & *flag as u8) != 0
     }
 
     pub fn set_or_clear_flag(&mut self, flag: &CpuFlag, set: bool) {
@@ -237,58 +240,6 @@ impl Cpu {
         } else {
             self.clear_flag(flag)
         }
-    }
-
-    pub fn get_registers(&self) -> Registers {
-        Registers {
-            a: self.a_register,
-            x: self.x_register,
-            y: self.y_register,
-            status: self.status_register,
-            stack_pointer: self.stack_pointer,
-            program_counter: self.program_counter,
-        }
-    }
-
-    /// Trace current cpu state in nestest.log format
-    /// Example output line:
-    /// ```
-    /// C000  4C F5 C5  JMP $C5F5                       A:00 X:00 Y:00 P:24 SP:FD PPU:  0, 21 CYC:7
-    /// ```
-    ///
-    /// Columns:
-    /// - `program_counter`: `C000`
-    /// - `CPU opcode`: `4C F5 C5` - Variable len - Recall that opcodes are 1-3 bytes. In the case
-    /// of shorter opcodes, we keep the columns spacing consistent and left-align the text
-    /// - `CPU_opcode in ASM` -
-    /// - $80 + X = real address = mem value at real address ???
-    ///     @ 80 = 0100 = 00
-    ///     - first num is mem referenc ethat we get if we apply offsert to the request
-    ///       address based on addressing mode
-    ///     - then a u16  target fecthed from [0x80..0x81]
-    ///     - the content of that address cell
-    /// - rest of the cpu registers: A, X, Y, P, SP
-    /// - CPU and PPU clock cycles
-
-    pub fn nestest_trace(&mut self) -> String {
-        // Allocing = cringe?
-        let mut trace = String::with_capacity(92);
-        let pad_till_col = |s: &mut String, col: usize| {
-            let amount_to_pad = col - s.len();
-            s.extend(std::iter::repeat(' ').take(amount_to_pad));
-        };
-
-        trace.extend(format!("{:04X}", self.program_counter).chars());
-        pad_till_col(&mut trace, 6);
-        // Program Counter
-        let opcode: OpCode = self.read(self.program_counter).into();
-
-        // todo!("put in the raw opcode");
-        pad_till_col(&mut trace, 16);
-        // let x = opcode.decompile();
-
-        // C000  4C F5 C5  JMP $C5F5                       A:00 X:00 Y:00 P:24 SP:FD PPU:  0, 21 CYC:7
-        todo!("write the trace");
     }
 }
 
@@ -299,9 +250,8 @@ pub struct Registers {
     pub y: u8,
     pub status: u8,
     pub stack_pointer: u8,
-    pub program_counter: u16,
+    pub pc: u16,
 }
-
 impl Reset for Cpu {
     // Maybe these should be in their own file
     fn reset(&mut self) {
@@ -309,14 +259,14 @@ impl Reset for Cpu {
         self.absolute_addr = Cpu::RESET_VECTOR;
         let lo = self.read(self.absolute_addr);
         let hi = self.read(self.absolute_addr + 1);
-        self.program_counter = u16::from_le_bytes([lo, hi]);
+        self.registers.pc = u16::from_le_bytes([lo, hi]);
 
         // Reset Internals to default
-        self.a_register = 0;
-        self.x_register = 0;
-        self.y_register = 0;
-        self.stack_pointer = Cpu::STACK_POINTER_RESET;
-        self.status_register = CpuFlag::Unused as u8;
+        self.registers.a = 0;
+        self.registers.x = 0;
+        self.registers.y = 0;
+        self.registers.stack_pointer = Cpu::STACK_POINTER_RESET;
+        self.registers.status = CpuFlag::Unused as u8;
 
         self.additional_cycle_addrmode = 0;
         self.additional_cycle_operation = 0;

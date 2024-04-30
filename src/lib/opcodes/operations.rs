@@ -20,7 +20,7 @@ pub fn adc_fn(cpu: &mut Cpu) -> u8 {
     let fetched = cpu.fetch();
 
     // add as u16 for overflow detection
-    let raw_add = cpu.a_register as u16 + fetched as u16 + cpu.get_flag(&CpuFlag::Carry) as u16;
+    let raw_add = cpu.registers.a as u16 + fetched as u16 + cpu.get_flag(&CpuFlag::Carry) as u16;
     let final_add = (raw_add & 0xFF) as u8;
 
     //
@@ -32,11 +32,12 @@ pub fn adc_fn(cpu: &mut Cpu) -> u8 {
     cpu.set_or_clear_flag(
         &CpuFlag::Overflow,
         {
-            !(cpu.a_register as u16 ^ fetched as u16) & ((cpu.a_register as u16 ^ raw_add) * 0x0080)
+            !(cpu.registers.a as u16 ^ fetched as u16)
+                & ((cpu.registers.a as u16 ^ raw_add) * 0x0080)
         } == 0,
     );
 
-    cpu.a_register = final_add;
+    cpu.registers.a = final_add;
 
     1 // Can require extra cycle
 }
@@ -55,7 +56,7 @@ pub fn sbc_fn(cpu: &mut Cpu) -> u8 {
     let fetched = cpu.fetch() ^ 0xFF;
 
     // add as u16 for overflow detection
-    let raw_add = cpu.a_register as u16 + fetched as u16 + cpu.get_flag(&CpuFlag::Carry) as u16;
+    let raw_add = cpu.registers.a as u16 + fetched as u16 + cpu.get_flag(&CpuFlag::Carry) as u16;
     let final_add = (raw_add & 0xFF) as u8;
 
     //
@@ -67,11 +68,12 @@ pub fn sbc_fn(cpu: &mut Cpu) -> u8 {
     cpu.set_or_clear_flag(
         &CpuFlag::Overflow,
         {
-            !(cpu.a_register as u16 ^ fetched as u16) & ((cpu.a_register as u16 ^ raw_add) * 0x0080)
+            !(cpu.registers.a as u16 ^ fetched as u16)
+                & ((cpu.registers.a as u16 ^ raw_add) * 0x0080)
         } == 0,
     );
 
-    cpu.a_register = final_add;
+    cpu.registers.a = final_add;
 
     1 // Can require extra cycle
 }
@@ -85,7 +87,7 @@ pub fn sbc_fn(cpu: &mut Cpu) -> u8 {
 pub fn and_fn(cpu: &mut Cpu) -> u8 {
     let fetched = cpu.fetch();
 
-    let res = cpu.a_register & fetched;
+    let res = cpu.registers.a & fetched;
     cpu.set_or_clear_flag(&CpuFlag::Zero, res == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, (res & 0x80) != 0);
 
@@ -109,7 +111,7 @@ pub fn asl_fn(cpu: &mut Cpu) -> u8 {
 
     // Store in either memory or accumulator
     match cpu.addressing_mode {
-        AddressingMode::IMP => cpu.a_register = result,
+        AddressingMode::IMP => cpu.registers.a = result,
         _ => cpu.write(cpu.absolute_addr, result),
     };
 
@@ -120,10 +122,10 @@ pub fn asl_fn(cpu: &mut Cpu) -> u8 {
 /// Returns 1 extra cycle if branch occurs to the same page.
 /// 2 Extra cycles if branch is onto a different bage
 pub fn relative_branch(cpu: &mut Cpu) -> u8 {
-    let pc_old = cpu.program_counter;
-    cpu.program_counter += (cpu.relative_addr as i16) as u16;
+    let pc_old = cpu.registers.pc;
+    cpu.registers.pc += (cpu.relative_addr as i16) as u16;
 
-    match (pc_old & 0xFF00) == (cpu.program_counter & 0xFF00) {
+    match (pc_old & 0xFF00) == (cpu.registers.pc & 0xFF00) {
         true => 1,  // Same page -> 1
         false => 2, // New page -> 2
     }
@@ -230,17 +232,17 @@ pub fn bpl_fn(cpu: &mut Cpu) -> u8 {
 pub fn brk_fn(cpu: &mut Cpu) -> u8 {
     // shouldn't ever need to wrap on a real program but, for completeness,
     // have it overflow
-    cpu.program_counter = cpu.program_counter.wrapping_add(1);
+    cpu.registers.pc = cpu.registers.pc.wrapping_add(1);
     cpu.set_flag(&CpuFlag::Interrupt);
 
     // Push PC to stack (2 bytes)
-    let [lo, hi] = cpu.program_counter.to_le_bytes();
+    let [lo, hi] = cpu.registers.pc.to_le_bytes();
     cpu.push_stack(hi);
     cpu.push_stack(lo);
 
     // Push status register but, with the break flag set
     cpu.set_flag(&CpuFlag::Break);
-    cpu.push_stack(cpu.status_register);
+    cpu.push_stack(cpu.registers.status);
     cpu.clear_flag(&CpuFlag::Break);
 
     // Load PC from interrupt vector (Last 2 bytes of address space)
@@ -289,7 +291,7 @@ pub fn bvs_fn(cpu: &mut Cpu) -> u8 {
 /// - V - Overflow Flag     - Set if bit 6 of result is set
 pub fn bit_fn(cpu: &mut Cpu) -> u8 {
     let fetched = cpu.fetch();
-    let result = cpu.a_register & fetched;
+    let result = cpu.registers.a & fetched;
 
     cpu.set_or_clear_flag(&CpuFlag::Zero, result == 0);
     cpu.set_or_clear_flag(&CpuFlag::Negative, (fetched & (1 << 7)) != 0);
@@ -344,7 +346,7 @@ pub fn clv_fn(cpu: &mut Cpu) -> u8 {
 /// ## Cycles:
 /// +1 if page crosses in certain addressing modes
 pub fn cmp_fn(cpu: &mut Cpu) -> u8 {
-    compare_values(cpu, cpu.a_register);
+    compare_values(cpu, cpu.registers.a);
     1
 }
 
@@ -356,7 +358,7 @@ pub fn cmp_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if X == M
 /// - N - Negative Flag     - Set if bit 7 of X - M is set
 pub fn cpx_fn(cpu: &mut Cpu) -> u8 {
-    compare_values(cpu, cpu.x_register);
+    compare_values(cpu, cpu.registers.x);
     0
 }
 
@@ -368,7 +370,7 @@ pub fn cpx_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if Y == M
 /// - N - Negative Flag     - Set if bit 7 of Y - M is set
 pub fn cpy_fn(cpu: &mut Cpu) -> u8 {
-    compare_values(cpu, cpu.y_register);
+    compare_values(cpu, cpu.registers.y);
     0
 }
 
@@ -405,9 +407,9 @@ pub fn dec_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if X == 0
 /// - N - Negative Flag     - Set if bit 7 of X is set
 pub fn dex_fn(cpu: &mut Cpu) -> u8 {
-    cpu.x_register = cpu.x_register.wrapping_sub(1);
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
+    cpu.registers.x = cpu.registers.x.wrapping_sub(1);
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.x == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.x & 0x80 != 0);
     0
 }
 
@@ -417,9 +419,9 @@ pub fn dex_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if y == 0
 /// - N - Negative Flag     - Set if bit 7 of y is set
 pub fn dey_fn(cpu: &mut Cpu) -> u8 {
-    cpu.y_register = cpu.x_register.wrapping_sub(1);
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
+    cpu.registers.y = cpu.registers.x.wrapping_sub(1);
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.y == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.y & 0x80 != 0);
     0
 }
 
@@ -430,9 +432,9 @@ pub fn dey_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
 pub fn eor_fn(cpu: &mut Cpu) -> u8 {
-    cpu.a_register ^= cpu.fetch();
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+    cpu.registers.a ^= cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.a == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.a & 0x80 != 0);
     1
 }
 
@@ -456,9 +458,9 @@ pub fn inc_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if X == 0
 /// - N - Negative Flag     - Set if bit 7 of X is set
 pub fn inx_fn(cpu: &mut Cpu) -> u8 {
-    cpu.x_register = cpu.x_register.wrapping_add(1);
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
+    cpu.registers.x = cpu.registers.x.wrapping_add(1);
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.x == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.x & 0x80 != 0);
     0
 }
 
@@ -468,30 +470,30 @@ pub fn inx_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if y == 0
 /// - N - Negative Flag     - Set if bit 7 of y is set
 pub fn iny_fn(cpu: &mut Cpu) -> u8 {
-    cpu.y_register = cpu.x_register.wrapping_add(1);
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
+    cpu.registers.y = cpu.registers.x.wrapping_add(1);
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.y == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.y & 0x80 != 0);
     0
 }
 
 /// # Jump to Address
 /// Sets the program counter to the address specified.
 pub fn jmp_fn(cpu: &mut Cpu) -> u8 {
-    cpu.program_counter = cpu.absolute_addr;
+    cpu.registers.pc = cpu.absolute_addr;
     0
 }
 
 /// # Jump to Subroutine
-/// Pushes the program_counter to the stack and then sets the program_counter
+/// Pushes the registers.pc to the stack and then sets the registers.pc
 /// to the address specified.
 pub fn jsr_fn(cpu: &mut Cpu) -> u8 {
-    cpu.program_counter -= 1;
+    cpu.registers.pc -= 1;
 
     // Push Hi and Lo Seperately
-    cpu.push_stack((cpu.program_counter >> 8 & 0x00FF) as u8);
-    cpu.push_stack((cpu.program_counter & 0x00FF) as u8);
+    cpu.push_stack((cpu.registers.pc >> 8 & 0x00FF) as u8);
+    cpu.push_stack((cpu.registers.pc & 0x00FF) as u8);
 
-    cpu.program_counter = cpu.absolute_addr;
+    cpu.registers.pc = cpu.absolute_addr;
 
     0
 }
@@ -502,9 +504,9 @@ pub fn jsr_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
 pub fn lda_fn(cpu: &mut Cpu) -> u8 {
-    cpu.a_register = cpu.fetch();
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+    cpu.registers.a = cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.a == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.a & 0x80 != 0);
 
     1
 }
@@ -515,9 +517,9 @@ pub fn lda_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
 pub fn ldx_fn(cpu: &mut Cpu) -> u8 {
-    cpu.x_register = cpu.fetch();
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
+    cpu.registers.x = cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.x == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.x & 0x80 != 0);
 
     1
 }
@@ -528,9 +530,9 @@ pub fn ldx_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
 pub fn ldy_fn(cpu: &mut Cpu) -> u8 {
-    cpu.y_register = cpu.fetch();
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
+    cpu.registers.y = cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.y == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.y & 0x80 != 0);
 
     1
 }
@@ -551,7 +553,7 @@ pub fn lsr_fn(cpu: &mut Cpu) -> u8 {
     cpu.set_or_clear_flag(&CpuFlag::Negative, res & 0x80 != 0);
 
     match cpu.addressing_mode {
-        AddressingMode::IMP => cpu.a_register = res,
+        AddressingMode::IMP => cpu.registers.a = res,
         _ => cpu.write(cpu.absolute_addr, res),
     }
 
@@ -587,9 +589,9 @@ pub fn nop_fn(_cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
 pub fn ora_fn(cpu: &mut Cpu) -> u8 {
-    cpu.a_register |= cpu.fetch();
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+    cpu.registers.a |= cpu.fetch();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.a == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.a & 0x80 != 0);
 
     1
 }
@@ -597,7 +599,7 @@ pub fn ora_fn(cpu: &mut Cpu) -> u8 {
 /// # Push Accumulator
 /// Pushes the accumulator onto the stack
 pub fn pha_fn(cpu: &mut Cpu) -> u8 {
-    cpu.push_stack(cpu.a_register);
+    cpu.push_stack(cpu.registers.a);
     0
 }
 
@@ -607,7 +609,7 @@ pub fn pha_fn(cpu: &mut Cpu) -> u8 {
 /// - B - Break Flag        - Set to 1 before pushing. Unset after
 /// - U - Unused Flag       - Set to 1 before pushing. Unset after TODO: verify
 pub fn php_fn(cpu: &mut Cpu) -> u8 {
-    cpu.push_stack(cpu.status_register | CpuFlag::Break as u8 | CpuFlag::Unused as u8);
+    cpu.push_stack(cpu.registers.status | CpuFlag::Break as u8 | CpuFlag::Unused as u8);
     cpu.clear_flag(&CpuFlag::Break);
     cpu.clear_flag(&CpuFlag::Unused);
     0
@@ -619,9 +621,9 @@ pub fn php_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if result is zero
 /// - N - Negative Flag     - Set if bit 7 of result is set
 pub fn pla_fn(cpu: &mut Cpu) -> u8 {
-    cpu.a_register = cpu.pop_stack();
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+    cpu.registers.a = cpu.pop_stack();
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.a == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.a & 0x80 != 0);
     0
 }
 
@@ -630,7 +632,7 @@ pub fn pla_fn(cpu: &mut Cpu) -> u8 {
 /// ## Processor Status after use:
 /// - U - Unused Flag       - Set to 1 after pulling. TODO: verify
 pub fn plp_fn(cpu: &mut Cpu) -> u8 {
-    cpu.a_register = cpu.pop_stack();
+    cpu.registers.a = cpu.pop_stack();
     cpu.set_flag(&CpuFlag::Unused);
     0
 }
@@ -652,7 +654,7 @@ pub fn rol_fn(cpu: &mut Cpu) -> u8 {
     cpu.set_or_clear_flag(&CpuFlag::Negative, res & 0x80 != 0);
 
     match cpu.addressing_mode {
-        AddressingMode::IMP => cpu.a_register = res as u8,
+        AddressingMode::IMP => cpu.registers.a = res as u8,
         _ => cpu.write(cpu.absolute_addr, (res & 0x00FF) as u8),
     };
 
@@ -675,7 +677,7 @@ pub fn ror_fn(cpu: &mut Cpu) -> u8 {
     cpu.set_or_clear_flag(&CpuFlag::Negative, res & 0x80 != 0);
 
     match cpu.addressing_mode {
-        AddressingMode::IMP => cpu.a_register = res,
+        AddressingMode::IMP => cpu.registers.a = res,
         _ => cpu.write(cpu.absolute_addr, res),
     };
 
@@ -694,7 +696,7 @@ pub fn ror_fn(cpu: &mut Cpu) -> u8 {
 /// - V - Overflow Flag     - Set from stack
 /// - N - Negative Flag     - Set from stack
 pub fn rti_fn(cpu: &mut Cpu) -> u8 {
-    cpu.status_register = cpu.pop_stack();
+    cpu.registers.status = cpu.pop_stack();
 
     // Unset Break and Unused since out of interrupt
     cpu.clear_flag(&CpuFlag::Break);
@@ -702,7 +704,7 @@ pub fn rti_fn(cpu: &mut Cpu) -> u8 {
 
     let lo = cpu.pop_stack();
     let hi = cpu.pop_stack();
-    cpu.program_counter = u16::from_le_bytes([lo, hi]);
+    cpu.registers.pc = u16::from_le_bytes([lo, hi]);
 
     0
 }
@@ -713,7 +715,7 @@ pub fn rti_fn(cpu: &mut Cpu) -> u8 {
 pub fn rts_fn(cpu: &mut Cpu) -> u8 {
     let lo = cpu.pop_stack();
     let hi = cpu.pop_stack();
-    cpu.program_counter = u16::from_le_bytes([lo, hi]) + 1;
+    cpu.registers.pc = u16::from_le_bytes([lo, hi]) + 1;
     0
 }
 
@@ -747,21 +749,21 @@ pub fn sei_fn(cpu: &mut Cpu) -> u8 {
 /// # Store Accumulator
 /// Stores the contents of the accumulator into memory
 pub fn sta_fn(cpu: &mut Cpu) -> u8 {
-    cpu.write(cpu.absolute_addr, cpu.a_register);
+    cpu.write(cpu.absolute_addr, cpu.registers.a);
     0
 }
 
 /// # Store X Register
 /// Stores the contents of X into memory
 pub fn stx_fn(cpu: &mut Cpu) -> u8 {
-    cpu.write(cpu.absolute_addr, cpu.x_register);
+    cpu.write(cpu.absolute_addr, cpu.registers.x);
     0
 }
 
 /// # Store Y Register
 /// Stores the contents of Y into memory
 pub fn sty_fn(cpu: &mut Cpu) -> u8 {
-    cpu.write(cpu.absolute_addr, cpu.y_register);
+    cpu.write(cpu.absolute_addr, cpu.registers.y);
     0
 }
 
@@ -771,9 +773,9 @@ pub fn sty_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if X is zero
 /// - N - Negative Flag     - Set if bit 7 of X is set
 pub fn tax_fn(cpu: &mut Cpu) -> u8 {
-    cpu.x_register = cpu.a_register;
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
+    cpu.registers.x = cpu.registers.a;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.x == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.x & 0x80 != 0);
     0
 }
 
@@ -783,9 +785,9 @@ pub fn tax_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if Y is zero
 /// - N - Negative Flag     - Set if bit 7 of Y is set
 pub fn tay_fn(cpu: &mut Cpu) -> u8 {
-    cpu.y_register = cpu.a_register;
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.y_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.y_register & 0x80 != 0);
+    cpu.registers.y = cpu.registers.a;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.y == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.y & 0x80 != 0);
     0
 }
 
@@ -795,16 +797,16 @@ pub fn tay_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if X is zero
 /// - N - Negative Flag     - Set if bit 7 of X is set
 pub fn tsx_fn(cpu: &mut Cpu) -> u8 {
-    cpu.x_register = cpu.stack_pointer;
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.x_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.x_register & 0x80 != 0);
+    cpu.registers.x = cpu.registers.stack_pointer;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.x == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.x & 0x80 != 0);
     0
 }
 
 /// # Transfer X to Stack Pointer
 /// Copies the contents of the X register into the stack pointer
 pub fn txs_fn(cpu: &mut Cpu) -> u8 {
-    cpu.stack_pointer = cpu.x_register;
+    cpu.registers.stack_pointer = cpu.registers.x;
     0
 }
 
@@ -814,9 +816,9 @@ pub fn txs_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if A is zero
 /// - N - Negative Flag     - Set if bit 7 of A is set
 pub fn txa_fn(cpu: &mut Cpu) -> u8 {
-    cpu.a_register = cpu.x_register;
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+    cpu.registers.a = cpu.registers.x;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.a == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.a & 0x80 != 0);
     0
 }
 
@@ -826,9 +828,9 @@ pub fn txa_fn(cpu: &mut Cpu) -> u8 {
 /// - Z - Zero Flag         - Set if A is zero
 /// - N - Negative Flag     - Set if bit 7 of A is set
 pub fn tya_fn(cpu: &mut Cpu) -> u8 {
-    cpu.a_register = cpu.y_register;
-    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.a_register == 0);
-    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.a_register & 0x80 != 0);
+    cpu.registers.a = cpu.registers.y;
+    cpu.set_or_clear_flag(&CpuFlag::Zero, cpu.registers.a == 0);
+    cpu.set_or_clear_flag(&CpuFlag::Negative, cpu.registers.a & 0x80 != 0);
     0
 }
 

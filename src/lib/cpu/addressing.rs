@@ -81,7 +81,7 @@ pub(self) mod fetching {
     use crate::Cpu;
 
     pub(super) fn fetch_imp(cpu: &mut Cpu) -> u8 {
-        cpu.fetched_data = cpu.a_register;
+        cpu.fetched_data = cpu.registers.a;
         0
     }
 
@@ -91,7 +91,7 @@ pub(self) mod fetching {
     }
 
     pub(super) fn fetch_zp0(cpu: &mut Cpu) -> u8 {
-        let offset = cpu.read(cpu.program_counter);
+        let offset = cpu.read(cpu.registers.pc);
 
         cpu.absolute_addr = offset as u16;
 
@@ -99,32 +99,32 @@ pub(self) mod fetching {
     }
 
     pub(super) fn fetch_zpx(cpu: &mut Cpu) -> u8 {
-        let offset = cpu.read(cpu.program_counter) + cpu.x_register;
+        let offset = cpu.read(cpu.registers.pc) + cpu.registers.x;
         cpu.absolute_addr = (offset as u16) & 0x00FF;
-        cpu.program_counter += 1;
+        cpu.registers.pc += 1;
         0
     }
 
     pub(super) fn fetch_zpy(cpu: &mut Cpu) -> u8 {
-        let offset = cpu.read(cpu.program_counter) + cpu.y_register;
+        let offset = cpu.read(cpu.registers.pc) + cpu.registers.y;
         cpu.absolute_addr = (offset as u16) & 0x00FF;
-        cpu.program_counter += 1;
+        cpu.registers.pc += 1;
         0
     }
 
     pub(super) fn fetch_rel(cpu: &mut Cpu) -> u8 {
         // TODO: check impl when signed
-        cpu.relative_addr = cpu.read(cpu.program_counter) as i8;
-        cpu.program_counter += 1;
+        cpu.relative_addr = cpu.read(cpu.registers.pc) as i8;
+        cpu.registers.pc += 1;
 
         0
     }
 
     pub(super) fn fetch_abs(cpu: &mut Cpu) -> u8 {
-        let lo = cpu.read(cpu.program_counter);
-        cpu.program_counter += 1;
-        let hi = cpu.read(cpu.program_counter);
-        cpu.program_counter += 1;
+        let lo = cpu.read(cpu.registers.pc);
+        cpu.registers.pc += 1;
+        let hi = cpu.read(cpu.registers.pc);
+        cpu.registers.pc += 1;
 
         cpu.absolute_addr = u16::from_le_bytes([lo, hi]);
 
@@ -132,12 +132,12 @@ pub(self) mod fetching {
     }
 
     pub(super) fn fetch_abx(cpu: &mut Cpu) -> u8 {
-        let lo = cpu.read(cpu.program_counter);
-        cpu.program_counter += 1;
-        let hi = cpu.read(cpu.program_counter);
-        cpu.program_counter += 1;
+        let lo = cpu.read(cpu.registers.pc);
+        cpu.registers.pc += 1;
+        let hi = cpu.read(cpu.registers.pc);
+        cpu.registers.pc += 1;
 
-        cpu.absolute_addr = u16::from_le_bytes([lo, hi]) + cpu.x_register as u16;
+        cpu.absolute_addr = u16::from_le_bytes([lo, hi]) + cpu.registers.x as u16;
 
         // If page overflow, then add a cycle
         match (cpu.absolute_addr & 0xFF00) != ((hi as u16) << 8) {
@@ -147,12 +147,12 @@ pub(self) mod fetching {
     }
 
     pub(super) fn fetch_aby(cpu: &mut Cpu) -> u8 {
-        let lo = cpu.read(cpu.program_counter);
-        cpu.program_counter += 1;
-        let hi = cpu.read(cpu.program_counter);
-        cpu.program_counter += 1;
+        let lo = cpu.read(cpu.registers.pc);
+        cpu.registers.pc += 1;
+        let hi = cpu.read(cpu.registers.pc);
+        cpu.registers.pc += 1;
 
-        cpu.absolute_addr = u16::from_le_bytes([lo, hi]) + cpu.y_register as u16;
+        cpu.absolute_addr = u16::from_le_bytes([lo, hi]) + cpu.registers.y as u16;
 
         // If page overflow, then add a cycle
         // (cpu.absolute_addr & 0xFF00) != (hi << 8)).into()
@@ -160,9 +160,9 @@ pub(self) mod fetching {
     }
 
     pub(super) fn fetch_ind(cpu: &mut Cpu) -> u8 {
-        let lo = cpu.read(cpu.program_counter);
-        cpu.program_counter += 1;
-        let hi = cpu.read(cpu.program_counter);
+        let lo = cpu.read(cpu.registers.pc);
+        cpu.registers.pc += 1;
+        let hi = cpu.read(cpu.registers.pc);
         let ptr_addr: u16 = u16::from_le_bytes([lo, hi]);
 
         // Simulate page boundary hardware bug
@@ -180,8 +180,8 @@ pub(self) mod fetching {
     }
 
     pub(super) fn fetch_izx(cpu: &mut Cpu) -> u8 {
-        let offset: u16 = (cpu.read(cpu.program_counter) + cpu.x_register) as u16;
-        cpu.program_counter += 1;
+        let offset: u16 = (cpu.read(cpu.registers.pc) + cpu.registers.x) as u16;
+        cpu.registers.pc += 1;
 
         // & 0x00FF to wrap around instead of moving to the next page
         let lo = cpu.read(offset & 0x00FF);
@@ -193,13 +193,13 @@ pub(self) mod fetching {
     }
 
     pub(super) fn fetch_izy(cpu: &mut Cpu) -> u8 {
-        let offset: u16 = cpu.read(cpu.program_counter) as u16;
-        cpu.program_counter += 1;
+        let offset: u16 = cpu.read(cpu.registers.pc) as u16;
+        cpu.registers.pc += 1;
 
         let lo = cpu.read(offset & 0x00FF);
         let hi = cpu.read((offset + 1) & 0x00FF);
 
-        cpu.absolute_addr = u16::from_le_bytes([lo, hi]) + cpu.y_register as u16;
+        cpu.absolute_addr = u16::from_le_bytes([lo, hi]) + cpu.registers.y as u16;
 
         // If page overflow, then add a cycle
         ((cpu.absolute_addr & 0xFF00) != ((hi as u16) << 8)).into()
