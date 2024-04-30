@@ -98,7 +98,7 @@ impl TryFrom<&[u8]> for Cartridge {
         // Trainer
         let bytestream = match has_trainer {
             true => &bytestream[512..],
-            false => &bytestream[..],
+            false => bytestream,
         };
         log_read_progress("Trainer", bytestream, cartridge_size);
 

@@ -1,4 +1,4 @@
-use pixels::Pixels;
+
 
 use crate::{Cartridge, RcCell, Reset};
 

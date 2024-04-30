@@ -77,7 +77,7 @@ impl AddressingMode {
     }
 }
 
-pub(self) mod fetching {
+ mod fetching {
     use crate::Cpu;
 
     pub(super) fn fetch_imp(cpu: &mut Cpu) -> u8 {

@@ -5,7 +5,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use env_logger::Env;
 use lib::{egui::Gui, Cartridge, Nes};
-use log::{debug, error, info, trace, warn};
+use log::{info};
 
 pub fn main() {
     let mut app = Gui::new(Nes::default());
