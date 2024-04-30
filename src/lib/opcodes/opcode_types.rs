@@ -1,4 +1,6 @@
-use crate::Cpu;
+use std::{num::NonZeroU8, ops::Add};
+
+use crate::{cpu::AddressingMode, Cpu};
 
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Copy, Clone)]
@@ -64,7 +66,7 @@ pub enum OpCodeType {
 }
 
 impl OpCodeType {
-    pub fn executable(&self) -> fn(&mut Cpu) -> u8 {
+    pub fn executable(&self) -> fn(&mut Cpu, AddressingMode) -> u8 {
         use self::OpCodeType::*;
         use super::operations::*;
 

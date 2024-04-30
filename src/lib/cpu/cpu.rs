@@ -9,6 +9,8 @@ use crate::{
 };
 use std::{cell::RefCell, rc::Rc};
 
+use super::addressing;
+
 /// Emulator for the `6502` CPU.
 ///
 /// DataSheet:
@@ -53,11 +55,11 @@ pub struct Cpu {
     ///
     /// Not "real" parts of the hardware but for emulation
     pub fetched_data: u8, // Fetched data - temp storage
-    pub absolute_addr: u16,              // Absolute address being read off
-    pub relative_addr: i8,               // Address relative to abs address
-    pub addressing_mode: AddressingMode, // Addressing mode
-    pub additional_cycle_addrmode: u8,   // Additional cycles for addressing mode
-    pub additional_cycle_operation: u8,  // Additional cycles for operation
+    pub absolute_addr: u16, // Absolute address being read off
+    pub relative_addr: i8,  // Address relative to abs address
+    // pub addressing_mode: AddressingMode, // Addressing mode
+    pub additional_cycle_addrmode: u8, // Additional cycles for addressing mode
+    pub additional_cycle_operation: u8, // Additional cycles for operation
 }
 
 impl Cpu {
@@ -84,7 +86,7 @@ impl Cpu {
             fetched_data: 0,
             absolute_addr: 0,
             relative_addr: 0,
-            addressing_mode: AddressingMode::IMP,
+            // addressing_mode: AddressingMode::IMP,
             additional_cycle_addrmode: 0,
             additional_cycle_operation: 0,
         }));
@@ -129,12 +131,12 @@ impl Cpu {
         self.clock.set_cycles(opcode.cycles as u64);
 
         // Addressing Mode Lookup for `absolute_addr` or `relative_addr`
-        self.addressing_mode = opcode.addressing_mode;
+        // self.addressing_mode = opcode.addressing_mode;
         // FIXME: Not sure if this is going to break things by doing a pre-emptive
         // fetch of the data, since the operation_fn also fetches.
         // PC may move out of sync.
         // Might want to do this in the actual addressing mode functions.
-        self.additional_cycle_addrmode = self.addressing_mode.fetch()(self);
+        // self.additional_cycle_addrmode = self.addressing_mode.fetch()(self);
 
         // Do the operation
         self.additional_cycle_operation = opcode.code_type.executable()(self);
@@ -149,9 +151,9 @@ impl Cpu {
 
     /// Fetch based on the current addressing mode. Stored in `self.fetched_data`
     /// Also returns the fetched_data
-    pub fn fetch(&mut self) -> u8 {
+    pub fn fetch(&mut self, addressing_mode: AddressingMode) -> u8 {
         // todo: special case for imp
-        self.addressing_mode.fetch()(self);
+        addressing_mode.fetch()(self);
         self.fetched_data
     }
 
@@ -270,7 +272,7 @@ impl Reset for Cpu {
 
         self.additional_cycle_addrmode = 0;
         self.additional_cycle_operation = 0;
-        self.addressing_mode = AddressingMode::IMP;
+        // self.addressing_mode = AddressingMode::IMP;
         self.absolute_addr = 0;
         self.fetched_data = 0;
 

@@ -1,3 +1,5 @@
+use std::num::NonZeroU8;
+
 use crate::Cpu;
 
 /// Functionality related to addressing modes.
@@ -59,7 +61,12 @@ pub enum AddressingMode {
 }
 
 impl AddressingMode {
-    pub fn fetch(&self) -> fn(&mut Cpu) -> u8 {
+    /// Uses the given addressing mode to fetch data from the Cpu.
+    /// # Returns
+    /// A tuple of the
+    /// - fetched data
+    /// - An option of any additional  cycles incurred
+    pub fn fetch(&self) -> fn(&mut Cpu) -> (u8, Option<NonZeroU8>) {
         match *self {
             AddressingMode::IMP => fetching::fetch_imp,
             AddressingMode::IMM => fetching::fetch_imm,
@@ -77,20 +84,20 @@ impl AddressingMode {
     }
 }
 
- mod fetching {
+mod fetching {
     use crate::Cpu;
+    use std::num::NonZeroU8;
 
-    pub(super) fn fetch_imp(cpu: &mut Cpu) -> u8 {
-        cpu.fetched_data = cpu.registers.a;
-        0
+    pub(super) fn fetch_imp(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
+        (cpu.registers.a, None)
     }
 
-    pub(super) fn fetch_imm(cpu: &mut Cpu) -> u8 {
+    pub(super) fn fetch_imm(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
         cpu.absolute_addr += 1;
         0
     }
 
-    pub(super) fn fetch_zp0(cpu: &mut Cpu) -> u8 {
+    pub(super) fn fetch_zp0(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
         let offset = cpu.read(cpu.registers.pc);
 
         cpu.absolute_addr = offset as u16;
@@ -98,21 +105,21 @@ impl AddressingMode {
         0
     }
 
-    pub(super) fn fetch_zpx(cpu: &mut Cpu) -> u8 {
+    pub(super) fn fetch_zpx(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
         let offset = cpu.read(cpu.registers.pc) + cpu.registers.x;
         cpu.absolute_addr = (offset as u16) & 0x00FF;
         cpu.registers.pc += 1;
         0
     }
 
-    pub(super) fn fetch_zpy(cpu: &mut Cpu) -> u8 {
+    pub(super) fn fetch_zpy(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
         let offset = cpu.read(cpu.registers.pc) + cpu.registers.y;
         cpu.absolute_addr = (offset as u16) & 0x00FF;
         cpu.registers.pc += 1;
         0
     }
 
-    pub(super) fn fetch_rel(cpu: &mut Cpu) -> u8 {
+    pub(super) fn fetch_rel(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
         // TODO: check impl when signed
         cpu.relative_addr = cpu.read(cpu.registers.pc) as i8;
         cpu.registers.pc += 1;
@@ -120,7 +127,7 @@ impl AddressingMode {
         0
     }
 
-    pub(super) fn fetch_abs(cpu: &mut Cpu) -> u8 {
+    pub(super) fn fetch_abs(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
         let lo = cpu.read(cpu.registers.pc);
         cpu.registers.pc += 1;
         let hi = cpu.read(cpu.registers.pc);
@@ -131,7 +138,7 @@ impl AddressingMode {
         0
     }
 
-    pub(super) fn fetch_abx(cpu: &mut Cpu) -> u8 {
+    pub(super) fn fetch_abx(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
         let lo = cpu.read(cpu.registers.pc);
         cpu.registers.pc += 1;
         let hi = cpu.read(cpu.registers.pc);
@@ -146,7 +153,7 @@ impl AddressingMode {
         }
     }
 
-    pub(super) fn fetch_aby(cpu: &mut Cpu) -> u8 {
+    pub(super) fn fetch_aby(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
         let lo = cpu.read(cpu.registers.pc);
         cpu.registers.pc += 1;
         let hi = cpu.read(cpu.registers.pc);
@@ -159,7 +166,7 @@ impl AddressingMode {
         ((cpu.absolute_addr & 0xFF00) != ((hi as u16) << 8)).into()
     }
 
-    pub(super) fn fetch_ind(cpu: &mut Cpu) -> u8 {
+    pub(super) fn fetch_ind(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
         let lo = cpu.read(cpu.registers.pc);
         cpu.registers.pc += 1;
         let hi = cpu.read(cpu.registers.pc);
@@ -179,7 +186,7 @@ impl AddressingMode {
         0
     }
 
-    pub(super) fn fetch_izx(cpu: &mut Cpu) -> u8 {
+    pub(super) fn fetch_izx(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
         let offset: u16 = (cpu.read(cpu.registers.pc) + cpu.registers.x) as u16;
         cpu.registers.pc += 1;
 
@@ -192,7 +199,7 @@ impl AddressingMode {
         0
     }
 
-    pub(super) fn fetch_izy(cpu: &mut Cpu) -> u8 {
+    pub(super) fn fetch_izy(cpu: &mut Cpu) -> (u8, Option<NonZeroU8>) {
         let offset: u16 = cpu.read(cpu.registers.pc) as u16;
         cpu.registers.pc += 1;
 
