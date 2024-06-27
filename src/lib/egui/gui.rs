@@ -73,6 +73,7 @@ impl Gui {
 
             let elapsed_time = self.startup_time.elapsed().as_secs_f32();
             let elapsed_str = fstrings::f!("Elapsed Time: {elapsed_time:.4}s");
+
             if tick_number % Self::FRAMERATE_UPDATE_INTERVAL == 0 {
                 self.update_framerate();
                 self.update_delta_time();
@@ -134,7 +135,7 @@ impl Gui {
     fn update_framerate(&mut self) -> u32 {
         let delta_time = self.last_frame.elapsed().as_millis();
         self.framerate = match delta_time == 0 {
-            true => 69,
+            true => 0,
             false => ((Self::FRAMERATE_UPDATE_INTERVAL as u128 * 1_000) / delta_time) as u32,
         };
         self.framerate

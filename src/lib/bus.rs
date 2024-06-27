@@ -9,6 +9,8 @@ use crate::{Cartridge, Clock, Cpu, Ppu, RcCell, Reset, WeakCell};
 ///
 /// ## Memory Layout - CPU
 ///
+///
+///
 /// | Range           | Size | Description                                   |
 /// |-----------------|------|-----------------------------------------------|
 /// | 0x0000 - 0x07FF | 2KB  | Internal Cpu Ram                              |
